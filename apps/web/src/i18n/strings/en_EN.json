@@ -2167,7 +2167,9 @@
             "other": "Currently removing messages in %(count)s rooms"
         },
         "section": {
+            "channels": "Channels",
             "chats": "Chats",
+            "contacts": "Contacts",
             "favourites": "Favourites",
             "low_priority": "Low Priority"
         },
