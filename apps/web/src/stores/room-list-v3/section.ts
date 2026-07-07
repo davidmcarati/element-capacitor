@@ -23,6 +23,18 @@ import SpaceStore from "../spaces/SpaceStore";
 export const CHATS_TAG = "chats";
 
 /**
+ * Synthetic display-only tags used to split the "Chats" section into two
+ * consecutive sections: "Channels" (non-DM rooms) and "Contacts" (DM rooms).
+ *
+ * These are NOT real tags: they are never added to the store's `sortedTags`,
+ * never used for filtering/reordering, and are not considered section tags by
+ * {@link isSectionTag}. They only exist so the view can render two headed
+ * sections in place of the single flat "Chats" list.
+ */
+export const CHANNELS_TAG = "channels";
+export const CONTACTS_TAG = "contacts";
+
+/**
  * Prefix for custom section tags.
  */
 export const CUSTOM_SECTION_TAG_PREFIX = "element.io.section.";

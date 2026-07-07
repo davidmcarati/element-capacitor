@@ -29,9 +29,10 @@ export function RoomListView(): JSX.Element {
     // Create and auto-dispose ViewModel instance
     const vm = useCreateAutoDisposedViewModel(() => new RoomListViewModel({ client: matrixClient }));
 
-    // Render avatar for each room - memoized to prevent re-renders
+    // Render avatar for each room - memoized to prevent re-renders.
+    // Uses a compact size for a denser, Slack-like room list.
     const renderAvatar = useCallback((room: SharedRoom): ReactNode => {
-        return <RoomAvatarView room={room as Room} />;
+        return <RoomAvatarView room={room as Room} size="24px" />;
     }, []);
 
     // Handle keyboard navigation for landmarks

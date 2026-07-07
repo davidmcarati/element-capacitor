@@ -41,7 +41,9 @@ import { ExcludeTagsFilter } from "./skip-list/filters/ExcludeTagsFilter";
 import { TagFilter } from "./skip-list/filters/TagFilter";
 import { filterBoolean } from "../../utils/arrays";
 import {
+    CHANNELS_TAG,
     CHATS_TAG,
+    CONTACTS_TAG,
     createSection,
     deleteSection,
     editSection,
@@ -49,6 +51,7 @@ import {
     reorderSection,
 } from "./section";
 import { DefaultTagID, type TagID } from "./skip-list/tag";
+import DMRoomMap from "../../utils/DMRoomMap";
 
 /**
  * These are the filters passed to the room skip list.
@@ -489,13 +492,27 @@ export class RoomListStoreV3Class extends AsyncStoreWithClient<EmptyObject> {
      */
     private getSections(filterKeys?: FilterKey[]): Section[] {
         return this.sortedTags
-            .map((tag) => {
+            .flatMap((tag) => {
                 const filters = filterBoolean([this.filterByTag.get(tag)?.key, ...(filterKeys ?? [])]);
+                const rooms = Array.from(this.roomSkipList?.getRoomsInActiveSpace(filters) || []);
 
-                return {
-                    tag,
-                    rooms: Array.from(this.roomSkipList?.getRoomsInActiveSpace(filters) || []),
-                };
+                // Split the synthetic "Chats" section into two consecutive sections:
+                // "Channels" (non-DM rooms) followed by "Contacts" (DM rooms). The room
+                // order within each is preserved from the sorted skip list.
+                if (tag === CHATS_TAG) {
+                    const channels: Room[] = [];
+                    const contacts: Room[] = [];
+                    for (const room of rooms) {
+                        if (DMRoomMap.shared().getUserIdForRoomId(room.roomId)) contacts.push(room);
+                        else channels.push(room);
+                    }
+                    return [
+                        { tag: CHANNELS_TAG, rooms: channels },
+                        { tag: CONTACTS_TAG, rooms: contacts },
+                    ];
+                }
+
+                return [{ tag, rooms }];
             })
             .filter((section) => !filterKeys || section.rooms.length > 0);
     }

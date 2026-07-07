@@ -69,8 +69,9 @@ export interface VirtualizedRoomListViewProps {
     onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
 }
 
-/** Height of a single room list item in pixels (44px item + 8px padding bottom) */
-const ROOM_LIST_ITEM_HEIGHT = 52;
+/** Approximate height of a single room list item in pixels (32px compact item + 8px padding).
+ *  Used only to size the virtualization overscan buffer; actual item heights are measured. */
+const ROOM_LIST_ITEM_HEIGHT = 40;
 
 /**
  * Number of pixels the keyboard sensor moves the dragged element per arrow keypress.

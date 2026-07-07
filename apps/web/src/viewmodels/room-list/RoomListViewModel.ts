@@ -39,7 +39,13 @@ import { hasCreateRoomRights } from "./utils";
 import { keepIfSame } from "../../utils/keepIfSame";
 import { DefaultTagID } from "../../stores/room-list-v3/skip-list/tag";
 import { RoomListSectionHeaderViewModel } from "./RoomListSectionHeaderViewModel";
-import { getCustomSectionData, isCustomSectionTag, CHATS_TAG } from "../../stores/room-list-v3/section";
+import {
+    getCustomSectionData,
+    isCustomSectionTag,
+    CHATS_TAG,
+    CHANNELS_TAG,
+    CONTACTS_TAG,
+} from "../../stores/room-list-v3/section";
 import { tagRoom } from "../../utils/room/tagRoom";
 import { getSectionTagForRoom } from "../../utils/room/getSectionTagForRoom";
 
@@ -70,6 +76,8 @@ const filterKeyToIdMap: Map<FilterEnum, FilterId> = new Map([
 const TAG_TO_TITLE_MAP: Record<string, string> = {
     [DefaultTagID.Favourite]: _t("room_list|section|favourites"),
     [CHATS_TAG]: _t("room_list|section|chats"),
+    [CHANNELS_TAG]: _t("room_list|section|channels"),
+    [CONTACTS_TAG]: _t("room_list|section|contacts"),
     [DefaultTagID.LowPriority]: _t("room_list|section|low_priority"),
 };
 

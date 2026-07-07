@@ -21,6 +21,8 @@ import SettingsStore from "../../settings/SettingsStore";
 import RoomListStoreV3 from "../../stores/room-list-v3/RoomListStoreV3";
 import {
     CHATS_TAG,
+    CHANNELS_TAG,
+    CONTACTS_TAG,
     getCustomSectionData,
     isCustomSectionTag,
     isDefaultSectionTag,
@@ -61,13 +63,16 @@ export class RoomListSectionHeaderViewModel
 
     public constructor(props: RoomListSectionHeaderViewModelProps) {
         const isDefaultSection = isDefaultSectionTag(props.tag);
+        // The synthetic "Channels"/"Contacts" sections (derived from splitting "Chats") behave like
+        // default sections: they can't be renamed, deleted, or reordered.
+        const isSyntheticChatsSection = props.tag === CHANNELS_TAG || props.tag === CONTACTS_TAG;
         super(props, {
             id: props.tag,
             title: props.title,
             isExpanded: true,
             isUnread: false,
-            displaySectionMenu: !isDefaultSection,
-            canBeReordered: !isDefaultSection || props.tag === CHATS_TAG,
+            displaySectionMenu: !isDefaultSection && !isSyntheticChatsSection,
+            canBeReordered: (!isDefaultSection && !isSyntheticChatsSection) || props.tag === CHATS_TAG,
         });
         const sectionWatherRef = SettingsStore.watchSetting("RoomList.CustomSectionData", null, () =>
             this.onCustomSectionDataChange(),
