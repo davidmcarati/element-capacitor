@@ -7,7 +7,75 @@
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=element-web&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=element-web)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=element-web&metric=bugs)](https://sonarcloud.io/summary/new_code?id=element-web)
 
+# Capacitor
+
+**Capacitor** is a custom fork of [Element Web](https://github.com/element-hq/element-web) — a Matrix
+web & desktop client — tailored for our homeserver. It keeps everything that makes Element a solid,
+end-to-end-encrypted Matrix client, while reworking the parts of the experience that felt unfamiliar or
+clunky for our users.
+
+## Why Capacitor?
+
+The goal is a Matrix client that _feels_ like the chat apps people already use every day. Three themes
+drive the work:
+
+1. **Familiar UX for Slack / Discord users.** Reorganise navigation and the room list around the
+   mental model people already have, instead of Matrix-specific concepts.
+2. **GIF support.** First-class GIF search and sending, right where you'd expect it in the composer.
+3. **General UI/UX polish.** Fix the papercuts and rough edges that add up to a worse everyday feel.
+
+## What's different from upstream Element
+
+### More familiar, Slack/Discord-style navigation
+
+- **Room list split into _Channels_ and _Contacts_.** The single "All Chats" list is divided into two
+  clear sections — group rooms (Channels) and direct messages (Contacts) — so the layout maps to how
+  people think about conversations.
+- **Compact, Slack-like room rows.** Smaller avatars and tighter rows fit more conversations on screen.
+- **Collapsible space rail.** The left-hand meta-space buttons (Home / "All Chats", Other rooms) are
+  tucked behind a single toggle by default and expand on demand, de-cluttering the sidebar.
+- **Drag-and-drop room ordering.** Reorder rooms within Channels/Contacts by dragging. The custom order
+  is stored in your account data, so it syncs across your devices.
+
+### GIF support
+
+- A **GIF button next to the emoji button** in the message composer opens a searchable GIF picker
+  (trending by default, live search as you type). Picking a GIF sends it as an animated image.
+- Powered by a configurable provider (Giphy). The API key is read at runtime from `config.json` under
+  `gif_provider` and is **never** committed to the repository — see
+  [the GIF configuration](#gif-picker-configuration) below.
+
+### UI/UX polish
+
+- **Presence dot fix.** The online/offline indicator now sits correctly on the avatar corner on the
+  compact room rows.
+- **Quieter encryption shields.** The grey, purely-informational "authenticity can't be guaranteed"
+  per-message icon is hidden to reduce noise, while genuine (red) security warnings are kept.
+- **Rebranding.** App name, icons, and in-app logos are updated to Capacitor.
+
+## GIF picker configuration
+
+GIF search needs a provider API key, which lives only in your local `config.json` (not in git):
+
+```json
+{
+    "gif_provider": {
+        "provider": "giphy",
+        "api_key": "YOUR_GIPHY_API_KEY",
+        "rating": "pg-13"
+    }
+}
+```
+
+Without a key the GIF button still appears but the picker prompts you to configure one. Get a free key
+from the [Giphy developer dashboard](https://developers.giphy.com/).
+
+---
+
 # Element
+
+Capacitor is built on top of Element. Everything below is upstream Element documentation and remains
+accurate for building, running, and configuring the app.
 
 Element (formerly known as Vector and Riot) is a Matrix web & desktop client built using the [Matrix
 JS SDK](https://github.com/matrix-org/matrix-js-sdk).
