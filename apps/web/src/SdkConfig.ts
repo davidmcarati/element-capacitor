@@ -69,6 +69,13 @@ export const DEFAULTS: DeepReadonly<IConfigOptions> = {
         android: "https://play.google.com/store/apps/details?id=im.vector.app",
         fdroid: "https://f-droid.org/repository/browse/?fdid=im.vector.app",
     },
+
+    // Capacitor: GIF picker defaults. The api_key is intentionally omitted here and must be
+    // supplied via config.json so it never lives in source control.
+    gif_provider: {
+        provider: "giphy",
+        rating: "pg-13",
+    },
 };
 
 export type ConfigOptions = Defaultize<IConfigOptions, typeof DEFAULTS>;

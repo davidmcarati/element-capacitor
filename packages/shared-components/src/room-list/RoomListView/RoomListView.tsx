@@ -95,6 +95,8 @@ export interface RoomListViewActions {
     setScrollToIndex: (scrollToIndex: ((index: number) => void) | undefined) => void;
     /** Called to change the section of a room */
     changeRoomSection: (roomId: string, tag: string) => void;
+    /** Called to reorder a room within its section by dropping it onto another room in the same section */
+    changeRoomOrder: (sourceRoomId: string, targetRoomId: string) => void;
     /** Called to change the order of sections */
     changeSectionOrder: (sourceTag: string, targetTag: string) => void;
     /** Called when a section drag starts — collapses all sections */

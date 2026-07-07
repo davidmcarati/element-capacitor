@@ -83,7 +83,6 @@ export interface EventTileE2ePadlockStateInput {
 
 /** Derives the E2E padlock display state for EventTile. */
 export function getEventTileE2ePadlockState({
-    mxEvent,
     verificationEvent,
     shieldColour,
     shieldReason,
@@ -104,15 +103,11 @@ export function getEventTileE2ePadlockState({
         }
     }
 
+    // Capacitor: suppress the informational grey "authenticity can't be guaranteed" indicator
+    // entirely (including the key-forwarded "messageShared" variant). Genuine security warnings
+    // (red shields for unverified users/devices) are unaffected and still render below.
     if (shieldReason === EventShieldReason.AUTHENTICITY_NOT_GUARANTEED) {
-        const keyForwardingUserId = mxEvent.getKeyForwardingUser();
-        if (keyForwardingUserId) {
-            return {
-                kind: "messageShared",
-                keyForwardingUserId,
-                roomId: verificationEvent.getRoomId()!,
-            };
-        }
+        return { kind: "none" };
     }
 
     if (shieldColour !== EventShieldColour.NONE) {

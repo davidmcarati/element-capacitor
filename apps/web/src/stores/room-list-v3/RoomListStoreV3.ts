@@ -6,9 +6,9 @@ Please see LICENSE files in the repository root for full details.
 */
 
 import { logger } from "matrix-js-sdk/src/logger";
-import { EventType } from "matrix-js-sdk/src/matrix";
+import { ClientEvent, EventType } from "matrix-js-sdk/src/matrix";
 
-import type { EmptyObject, Room } from "matrix-js-sdk/src/matrix";
+import type { EmptyObject, MatrixEvent, Room } from "matrix-js-sdk/src/matrix";
 import type { MatrixDispatcher } from "../../dispatcher/dispatcher";
 import type { ActionPayload } from "../../dispatcher/payloads";
 import type { Filter, FilterKey } from "./skip-list/filters";
@@ -52,6 +52,13 @@ import {
 } from "./section";
 import { DefaultTagID, type TagID } from "./skip-list/tag";
 import DMRoomMap from "../../utils/DMRoomMap";
+import {
+    applyManualOrder,
+    type ManualOrderMap,
+    MANUAL_ORDER_EVENT_TYPE,
+    persistManualOrder,
+    readManualOrder,
+} from "./manualOrder";
 
 /**
  * These are the filters passed to the room skip list.
@@ -122,6 +129,12 @@ export class RoomListStoreV3Class extends AsyncStoreWithClient<EmptyObject> {
      * Defines the display order of sections.
      */
     private sortedTags: string[] = [];
+
+    /**
+     * Cached manual room ordering per section, sourced from account data (syncs across devices).
+     * Applied as a stable overlay on top of the global sort in {@link getSections}.
+     */
+    private manualOrder: ManualOrderMap = {};
 
     private readonly msc3946ProcessDynamicPredecessor: boolean;
 
@@ -239,13 +252,28 @@ export class RoomListStoreV3Class extends AsyncStoreWithClient<EmptyObject> {
         await SpaceStore.instance.storeReadyPromise;
         const rooms = this.getRooms();
         this.roomSkipList.seed(rooms);
+
+        this.manualOrder = readManualOrder(this.matrixClient);
+        this.matrixClient.on(ClientEvent.AccountData, this.onAccountData);
+
         this.emit(LISTS_LOADED_EVENT);
         this.emit(LISTS_UPDATE_EVENT);
     }
 
     protected async onNotReady(): Promise<void> {
+        this.matrixClient?.off(ClientEvent.AccountData, this.onAccountData);
+        this.manualOrder = {};
         this.roomSkipList = undefined;
     }
+
+    /**
+     * Refresh the cached manual ordering when the relevant account-data event changes remotely.
+     */
+    private onAccountData = (event: MatrixEvent): void => {
+        if (event.getType() !== MANUAL_ORDER_EVENT_TYPE || !this.matrixClient) return;
+        this.manualOrder = readManualOrder(this.matrixClient);
+        this.scheduleEmit();
+    };
 
     protected async onAction(payload: ActionPayload): Promise<void> {
         if (!this.matrixClient || !this.roomSkipList?.initialized) return;
@@ -507,8 +535,8 @@ export class RoomListStoreV3Class extends AsyncStoreWithClient<EmptyObject> {
                         else channels.push(room);
                     }
                     return [
-                        { tag: CHANNELS_TAG, rooms: channels },
-                        { tag: CONTACTS_TAG, rooms: contacts },
+                        { tag: CHANNELS_TAG, rooms: applyManualOrder(channels, this.manualOrder[CHANNELS_TAG]) },
+                        { tag: CONTACTS_TAG, rooms: applyManualOrder(contacts, this.manualOrder[CONTACTS_TAG]) },
                     ];
                 }
 
@@ -566,6 +594,22 @@ export class RoomListStoreV3Class extends AsyncStoreWithClient<EmptyObject> {
      */
     public async reorderSection(sourceTag: string, targetTag: string): Promise<void> {
         await reorderSection(sourceTag, targetTag);
+    }
+
+    /**
+     * Persist a manual ordering of rooms within a section. `orderedRoomIds` should list the
+     * section's rooms in their desired display order. The ordering is stored in account data so it
+     * syncs across devices. Emits {@link LISTS_UPDATE_EVENT}.
+     * @param sectionTag The section whose rooms are being reordered (e.g. Channels or Contacts).
+     * @param orderedRoomIds The full list of room ids in the section, in the desired order.
+     */
+    public async reorderRoomInSection(sectionTag: string, orderedRoomIds: string[]): Promise<void> {
+        if (!this.matrixClient) return;
+        // Optimistically update the local cache so the list reflects the change immediately; the
+        // account-data listener will reconcile once the change round-trips from the server.
+        this.manualOrder = { ...this.manualOrder, [sectionTag]: orderedRoomIds };
+        this.scheduleEmit();
+        await persistManualOrder(this.matrixClient, sectionTag, orderedRoomIds);
     }
 
     /**

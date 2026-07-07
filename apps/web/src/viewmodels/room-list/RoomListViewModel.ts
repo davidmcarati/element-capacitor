@@ -48,6 +48,7 @@ import {
 } from "../../stores/room-list-v3/section";
 import { tagRoom } from "../../utils/room/tagRoom";
 import { getSectionTagForRoom } from "../../utils/room/getSectionTagForRoom";
+import { computeReorderedIds } from "../../stores/room-list-v3/manualOrder";
 
 /**
  * Tracks the position of the active room within a specific section.
@@ -872,6 +873,38 @@ export class RoomListViewModel
         if (currentTag === tag) return;
 
         tagRoom(room, tag);
+    };
+
+    /**
+     * Reorder a room within its section by dropping it onto another room in the same section.
+     * Only the synthetic Channels/Contacts sections support manual ordering (the store applies the
+     * manual-order overlay to those). The new order is persisted to account data so it syncs across
+     * devices.
+     */
+    public changeRoomOrder = async (sourceRoomId: string, targetRoomId: string): Promise<void> => {
+        if (sourceRoomId === targetRoomId) return;
+
+        // Use the canonical, fully-ordered section rooms straight from the store.
+        const filterKeys = this.activeFilter !== undefined ? [this.activeFilter] : undefined;
+        const current = RoomListStoreV3.instance.getSortedRoomsInActiveSpace(filterKeys);
+        const section = current.sections.find((s) => s.rooms.some((r) => r.roomId === sourceRoomId));
+
+        // Manual ordering is only supported for the Channels/Contacts sections.
+        if (!section || (section.tag !== CHANNELS_TAG && section.tag !== CONTACTS_TAG)) return;
+        // The target room must live in the same section.
+        if (!section.rooms.some((r) => r.roomId === targetRoomId)) return;
+
+        const orderedIds = section.rooms.map((r) => r.roomId);
+        const newOrder = computeReorderedIds(orderedIds, sourceRoomId, targetRoomId);
+
+        await RoomListStoreV3.instance.reorderRoomInSection(section.tag, newOrder);
+
+        // Refresh from the store and rebuild. Clear the sticky-room anchor so it doesn't fight the
+        // manual placement the user just made.
+        this.roomsResult = RoomListStoreV3.instance.getSortedRoomsInActiveSpace(filterKeys);
+        this.updateRoomsMap(this.roomsResult);
+        this.lastActiveRoomPosition = undefined;
+        this.updateRoomListData();
     };
 }
 

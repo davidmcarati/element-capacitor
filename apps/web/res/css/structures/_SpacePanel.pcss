@@ -339,6 +339,15 @@ Please see LICENSE files in the repository root for full details.
             mask-repeat: no-repeat;
         }
     }
+
+    /* Capacitor: chevron for the collapsible meta-space group toggle */
+    .mx_SpacePanel_metaSpacesToggleButton .mx_SpaceButton_icon svg {
+        transition: transform 0.1s ease;
+    }
+
+    .mx_SpacePanel_metaSpacesToggleButton_expanded .mx_SpaceButton_icon svg {
+        transform: rotate(90deg);
+    }
 }
 
 .mx_SpacePanel_contextMenu {

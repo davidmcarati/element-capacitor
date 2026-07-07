@@ -549,7 +549,11 @@ export function VirtualizedRoomListView({ vm, renderAvatar, onKeyDown }: Virtual
                 if (event.canceled || !source || !target) return;
                 if (isSectionDragData(source.data)) {
                     vm.changeSectionOrder(String(source.id), String(target.id));
+                } else if ((target.data as RoomListDragData | undefined)?.type === "room") {
+                    // Dropped a room onto another room: reorder within the section.
+                    vm.changeRoomOrder(String(source.id), String(target.id));
                 } else {
+                    // Dropped a room onto a section header: move it to that section.
                     vm.changeRoomSection(String(source.id), String(target.id));
                 }
             }}
