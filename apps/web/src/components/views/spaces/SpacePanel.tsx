@@ -300,6 +300,27 @@ interface IInnerSpacePanelProps extends DroppableProvidedProps {
     innerRef: RefCallback<HTMLElement>;
 }
 
+// Capacitor: the meta-space shortcut buttons (Home/"All Chats", "Other rooms", etc.) are tucked
+// away behind a single toggle by default and can be expanded on demand. State is persisted locally.
+const METASPACES_COLLAPSED_KEY = "mx_capacitor_metaspaces_collapsed";
+
+function getMetaSpacesCollapsed(): boolean {
+    try {
+        const stored = localStorage.getItem(METASPACES_COLLAPSED_KEY);
+        return stored === null ? true : Boolean(JSON.parse(stored));
+    } catch {
+        return true;
+    }
+}
+
+function setMetaSpacesCollapsedStored(collapsed: boolean): void {
+    try {
+        localStorage.setItem(METASPACES_COLLAPSED_KEY, JSON.stringify(collapsed));
+    } catch {
+        // ignore storage failures (e.g. private mode); state still applies for the session
+    }
+}
+
 // Optimisation based on https://github.com/atlassian/react-beautiful-dnd/blob/master/docs/api/droppable.md#recommended-droppable--performance-optimisation
 const InnerSpacePanel = React.memo<IInnerSpacePanelProps>(
     ({ children, isPanelCollapsed, setPanelCollapsed, isDraggingOver, innerRef, ...props }) => {
@@ -307,6 +328,15 @@ const InnerSpacePanel = React.memo<IInnerSpacePanelProps>(
         const activeSpaces = activeSpace ? [activeSpace] : [];
 
         const moduleSpaceItems = useModuleSpacePanelItems(ModuleApi.instance.extras);
+
+        const [metaSpacesCollapsed, setMetaSpacesCollapsed] = useState<boolean>(getMetaSpacesCollapsed);
+        const toggleMetaSpaces = useCallback(() => {
+            setMetaSpacesCollapsed((collapsed) => {
+                const next = !collapsed;
+                setMetaSpacesCollapsedStored(next);
+                return next;
+            });
+        }, []);
 
         const metaSpacesSection = metaSpaces
             .filter((key) => !(key === MetaSpace.VideoRooms && !SettingsStore.getValue("feature_video_rooms")))
@@ -331,7 +361,25 @@ const InnerSpacePanel = React.memo<IInnerSpacePanelProps>(
                 role="tree"
                 aria-label={_t("common|spaces")}
             >
-                {metaSpacesSection}
+                <li
+                    className={classNames("mx_SpaceItem", "mx_SpacePanel_metaSpacesToggle", {
+                        collapsed: isPanelCollapsed,
+                    })}
+                    role="treeitem"
+                    aria-expanded={!metaSpacesCollapsed}
+                >
+                    <SpaceButton
+                        className={classNames("mx_SpacePanel_metaSpacesToggleButton", {
+                            mx_SpacePanel_metaSpacesToggleButton_expanded: !metaSpacesCollapsed,
+                        })}
+                        icon={<ChevronRightIcon />}
+                        label={_t("common|spaces")}
+                        isNarrow={isPanelCollapsed}
+                        size="32px"
+                        onClick={toggleMetaSpaces}
+                    />
+                </li>
+                {!metaSpacesCollapsed && metaSpacesSection}
                 {invites.map((s) => (
                     <SpaceItem
                         key={s.roomId}

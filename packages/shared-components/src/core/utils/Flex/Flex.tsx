@@ -86,5 +86,12 @@ export function Flex<T extends keyof JSX.IntrinsicElements | JSXElementConstruct
         [align, direction, display, gap, justify, wrap],
     );
 
-    return React.createElement(as, { ...props, className: classNames(styles.flex, className), style }, children);
+    // Merge any caller-provided `style` on top of the computed flex CSS variables so inline
+    // custom properties (e.g. `--room-avatar-size`) set by consumers are not silently dropped.
+    const mergedStyle = { ...style, ...(props as { style?: React.CSSProperties }).style };
+    return React.createElement(
+        as,
+        { ...props, className: classNames(styles.flex, className), style: mergedStyle },
+        children,
+    );
 }

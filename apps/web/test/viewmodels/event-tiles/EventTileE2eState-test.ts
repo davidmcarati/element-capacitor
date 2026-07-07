@@ -92,7 +92,7 @@ describe("EventTileE2eState", () => {
         },
     );
 
-    it("shows a message-shared state when the authenticity warning has a key forwarding user", () => {
+    it("suppresses the authenticity-not-guaranteed indicator even with a key forwarding user", () => {
         const mxEvent = makeEvent();
         jest.spyOn(mxEvent, "getKeyForwardingUser").mockReturnValue("@bob:example.org");
 
@@ -104,11 +104,7 @@ describe("EventTileE2eState", () => {
             }),
         );
 
-        expect(state).toEqual({
-            kind: "messageShared",
-            keyForwardingUserId: "@bob:example.org",
-            roomId,
-        });
+        expect(state.kind).toBe("none");
     });
 
     it("shows a normal shield for grey shield state", () => {
@@ -214,11 +210,6 @@ describe("EventTileE2eState", () => {
         [EventShieldReason.UNVERIFIED_IDENTITY, E2ePadlockIcon.Normal, "Encrypted by an unverified user."],
         [EventShieldReason.UNSIGNED_DEVICE, E2ePadlockIcon.Normal, "Encrypted by a device not verified by its owner."],
         [EventShieldReason.UNKNOWN_DEVICE, E2ePadlockIcon.Normal, "Encrypted by an unknown or deleted device."],
-        [
-            EventShieldReason.AUTHENTICITY_NOT_GUARANTEED,
-            E2ePadlockIcon.Warning,
-            "The authenticity of this encrypted message can't be guaranteed on this device.",
-        ],
         [EventShieldReason.MISMATCHED_SENDER_KEY, E2ePadlockIcon.Warning, "Encrypted by an unverified session"],
         [EventShieldReason.SENT_IN_CLEAR, E2ePadlockIcon.Warning, "Not encrypted"],
         [
@@ -246,7 +237,7 @@ describe("EventTileE2eState", () => {
         });
     });
 
-    it("keeps forwarded-message state renderable by the shared-message indicator", () => {
+    it("does not render any indicator for authenticity-not-guaranteed forwarded messages", () => {
         const mxEvent = makeEvent();
         jest.spyOn(mxEvent, "getKeyForwardingUser").mockReturnValue("@bob:example.org");
 
@@ -258,10 +249,6 @@ describe("EventTileE2eState", () => {
             }),
         );
 
-        expect(state).toEqual({
-            kind: "messageShared",
-            keyForwardingUserId: "@bob:example.org",
-            roomId,
-        });
+        expect(state).toEqual({ kind: "none" });
     });
 });

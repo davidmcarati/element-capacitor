@@ -6,7 +6,7 @@
  */
 
 import React, { memo, type JSX } from "react";
-import { useDraggable } from "@dnd-kit/react";
+import { useDraggable, useDragOperation, useDroppable } from "@dnd-kit/react";
 import { Feedback } from "@dnd-kit/dom";
 import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
 import { useMergeRefs } from "react-merge-refs";
@@ -14,7 +14,7 @@ import { useMergeRefs } from "react-merge-refs";
 import { RoomListItemView, type RoomListItemViewProps } from "./RoomListItemView";
 import { getItemAccessibleProps } from "../../../core/VirtualizedList";
 import { useViewModel } from "../../../core/viewmodel";
-import { type RoomDragData } from "../dragAndDrop";
+import { type RoomDragData, type RoomListDragData } from "../dragAndDrop";
 
 export interface RoomListItemWrapperProps extends RoomListItemViewProps {
     /** Index of this room in the list */
@@ -84,6 +84,21 @@ function DraggableWrapper(props: RoomListItemViewProps): JSX.Element {
         plugins: [Feedback.configure({ feedback: "clone" })],
         modifiers: [RestrictToVerticalAxis],
     });
-    const dndRef = useMergeRefs([draggableRef, handleRef]);
-    return <RoomListItemView {...props} ref={dndRef} isDragSource={isDragSource} />;
+
+    // Rooms are also drop targets so a dragged room can be dropped onto another room to reorder
+    // within the section. Disabled while this row is the drag source so it can't target itself.
+    const { ref: droppableRef, isDropTarget } = useDroppable<RoomDragData>({
+        id: item.id,
+        data: { type: "room" },
+        disabled: isDragSource,
+    });
+
+    // Only surface the reorder indicator when the thing being dragged is a room (not a section).
+    const { source } = useDragOperation<RoomListDragData>();
+    const isRoomReorderTarget = isDropTarget && source?.data?.type === "room";
+
+    const dndRef = useMergeRefs([draggableRef, handleRef, droppableRef]);
+    return (
+        <RoomListItemView {...props} ref={dndRef} isDragSource={isDragSource} isDropTarget={isRoomReorderTarget} />
+    );
 }

@@ -16,6 +16,7 @@ import type { DeviceClientInformation } from "../utils/device/types.ts";
 import type { UserWidget } from "../utils/WidgetUtils-types.ts";
 import { type MediaPreviewConfig } from "./media_preview.ts";
 import { type INVITE_RULES_ACCOUNT_DATA_TYPE, type InviteConfigAccountData } from "./invite-rules.ts";
+import { type MANUAL_ORDER_EVENT_TYPE, type ManualOrderContent } from "../stores/room-list-v3/manualOrder.ts";
 
 // Extend Matrix JS SDK types via Typescript declaration merging to support unspecced event fields and types
 declare module "matrix-js-sdk/src/types" {
@@ -95,6 +96,9 @@ declare module "matrix-js-sdk/src/types" {
 
         // Indicate whether recovery is enabled or disabled
         "io.element.recovery": { enabled: boolean };
+
+        // Capacitor: manual room ordering within room-list sections (Channels/Contacts)
+        [MANUAL_ORDER_EVENT_TYPE]: ManualOrderContent;
     }
 
     export interface AudioContent {
