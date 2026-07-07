@@ -625,6 +625,16 @@
         "format_underline": "Underline",
         "format_unordered_list": "Bulleted list",
         "formatting_toolbar_label": "Formatting",
+        "gif_button": "GIF",
+        "gif_picker": {
+            "error": "Couldn't load GIFs. Check your connection and try again.",
+            "error_send": "The GIF couldn't be sent. Please try again.",
+            "error_title": "Failed to send GIF",
+            "no_results": "No GIFs found",
+            "not_configured": "GIF search isn't set up. Add a \"gif_provider\" API key to config.json to enable it.",
+            "powered_by": "Powered by GIPHY",
+            "search_placeholder": "Search GIFs"
+        },
         "link_modal": {
             "link_field_label": "Link",
             "text_field_label": "Text",

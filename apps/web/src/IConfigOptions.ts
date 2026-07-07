@@ -215,6 +215,20 @@ export interface IConfigOptions {
     };
 
     modules?: string[];
+
+    /**
+     * Capacitor: configuration for the in-composer GIF search picker.
+     * When `api_key` is unset the GIF button still renders but the picker prompts to configure a key.
+     * OPTIONAL
+     */
+    gif_provider?: {
+        /** GIF provider. Currently only "giphy" is implemented. */
+        provider?: "giphy";
+        /** Provider API key. Keep this out of source control (set it in config.json). */
+        api_key?: string;
+        /** Content rating filter passed to the provider (e.g. "g", "pg", "pg-13", "r"). */
+        rating?: string;
+    };
 }
 
 export interface ISsoRedirectOptions {

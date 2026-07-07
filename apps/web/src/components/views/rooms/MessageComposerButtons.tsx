@@ -39,6 +39,7 @@ import IconizedContextMenu, {
     IconizedContextMenuOptionList,
 } from "../context_menus/IconizedContextMenu";
 import { EmojiButton } from "./EmojiButton";
+import { GifButton } from "./GifButton";
 import { filterBoolean } from "../../../utils/arrays";
 import { useSettingValue } from "../../../hooks/useSettings";
 import AccessibleButton, { type ButtonEvent } from "../elements/AccessibleButton";
@@ -90,6 +91,7 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
             ) : (
                 emojiButton(props)
             ),
+            gifButton(props, room),
         ];
         moreButtons = [
             // This a textual list of buttons, so we can't use the UploadButton here.
@@ -117,6 +119,7 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
             ) : (
                 emojiButton(props)
             ),
+            gifButton(props, room),
             <UploadButton key="upload" vm={roomUploadVM} />,
         ];
         moreButtons = [
@@ -169,6 +172,18 @@ function emojiButton(props: IProps): ReactElement {
         <EmojiButton
             key="emoji_button"
             addEmoji={props.addEmoji}
+            menuPosition={props.menuPosition}
+            className="mx_MessageComposer_button"
+        />
+    );
+}
+
+function gifButton(props: IProps, room: Room): ReactElement {
+    return (
+        <GifButton
+            key="gif_button"
+            roomId={room.roomId}
+            relation={props.relation}
             menuPosition={props.menuPosition}
             className="mx_MessageComposer_button"
         />
