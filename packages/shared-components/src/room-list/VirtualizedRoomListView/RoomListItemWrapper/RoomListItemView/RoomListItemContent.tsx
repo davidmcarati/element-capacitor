@@ -7,10 +7,12 @@
 
 import React, { type JSX, memo, type ReactNode } from "react";
 import { Text } from "@vector-im/compound-web";
+import { ChevronDownIcon, ChevronUpIcon } from "@vector-im/compound-design-tokens/assets/web/icons";
 import classNames from "classnames";
 
 import { Flex } from "../../../../core/utils/Flex";
 import { useViewModel } from "../../../../core/viewmodel";
+import { _t } from "../../../../core/i18n/i18n";
 import { NotificationDecoration } from "./NotificationDecoration";
 import { RoomListItemHoverMenu } from "./RoomListItemHoverMenu";
 import { type Room, type RoomListItemViewModel } from "./RoomListItemView";
@@ -40,6 +42,10 @@ export const RoomListItemContent = memo(function RoomListItemContent({
 }: RoomListItemContentProps): JSX.Element {
     const item = useViewModel(vm);
 
+    // Only offer the collapse toggle in the actual row (not the drag overlay) and only when the
+    // room has active threads to hide/show.
+    const showThreadsToggle = !isDragging && item.activeThreads.length > 0;
+
     return (
         <Flex
             className={classNames(styles.container, {
@@ -52,8 +58,34 @@ export const RoomListItemContent = memo(function RoomListItemContent({
             <Flex className={styles.content} gap="var(--cpd-space-2x)" align="center" justify="space-between">
                 {/* We truncate the room name when too long. Title here is to show the full name on hover */}
                 <div className={styles.ellipsis}>
-                    <div className={styles.roomName} title={item.name} data-testid="room-name">
-                        {item.name}
+                    <div className={styles.roomNameRow}>
+                        <div className={styles.roomName} title={item.name} data-testid="room-name">
+                            {item.name}
+                        </div>
+                        {showThreadsToggle && (
+                            <button
+                                type="button"
+                                className={styles.threadsToggle}
+                                aria-expanded={!item.threadsCollapsed}
+                                aria-label={
+                                    item.threadsCollapsed
+                                        ? _t("room_list|threads|expand")
+                                        : _t("room_list|threads|collapse")
+                                }
+                                title={
+                                    item.threadsCollapsed
+                                        ? _t("room_list|threads|expand")
+                                        : _t("room_list|threads|collapse")
+                                }
+                                onClick={(e) => {
+                                    // Prevent the parent room button from also opening the room.
+                                    e.stopPropagation();
+                                    vm.onToggleThreadsCollapsed();
+                                }}
+                            >
+                                {item.threadsCollapsed ? <ChevronDownIcon /> : <ChevronUpIcon />}
+                            </button>
+                        )}
                     </div>
                     {item.messagePreview && (
                         <Text as="div" size="sm" className={styles.ellipsis} title={item.messagePreview}>

@@ -54,4 +54,5 @@ export const defaultSnapshot: RoomListItemViewSnapshot = {
         },
     ],
     activeThreads: [],
+    threadsCollapsed: false,
 };

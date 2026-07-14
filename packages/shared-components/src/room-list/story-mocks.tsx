@@ -107,6 +107,7 @@ export const createMockRoomSnapshot = (id: string, name: string, index: number):
     roomNotifState: RoomNotifState.AllMessages,
     sections: [],
     activeThreads: [],
+    threadsCollapsed: false,
 });
 
 export function createMockRoomItemViewModel(roomId: string, name: string, index: number): RoomListItemViewModel {
@@ -116,6 +117,7 @@ export function createMockRoomItemViewModel(roomId: string, name: string, index:
         subscribe: fn(),
         onOpenRoom: fn(),
         onOpenThread: fn(),
+        onToggleThreadsCollapsed: fn(),
         onMarkAsRead: fn(),
         onMarkAsUnread: fn(),
         onToggleFavorite: fn(),

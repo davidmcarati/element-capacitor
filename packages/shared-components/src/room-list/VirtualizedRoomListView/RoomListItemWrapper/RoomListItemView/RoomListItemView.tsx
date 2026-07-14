@@ -109,6 +109,8 @@ export interface RoomListItemViewSnapshot {
     sections: Section[];
     /** Active threads (recent activity) to display beneath the room */
     activeThreads: ActiveThreadItem[];
+    /** Whether the room's active thread list is collapsed (hidden) by the user */
+    threadsCollapsed: boolean;
 }
 
 /**
@@ -120,6 +122,8 @@ export interface RoomListItemViewActions {
     onOpenRoom: () => void;
     /** Called when one of the room's active threads should be opened */
     onOpenThread: (threadId: string) => void;
+    /** Called when the room's active thread list should be collapsed/expanded */
+    onToggleThreadsCollapsed: () => void;
     /** Called when the room should be marked as read */
     onMarkAsRead: () => void;
     /** Called when the room should be marked as unread */
@@ -271,7 +275,7 @@ export const RoomListItemView = memo(function RoomListItemView({
     return (
         <div className={styles.roomListItemWrapper}>
             {roomButton}
-            <RoomListItemThreads vm={vm} />
+            {!item.threadsCollapsed && <RoomListItemThreads vm={vm} />}
         </div>
     );
 });

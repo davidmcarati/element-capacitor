@@ -110,6 +110,39 @@
     text-overflow: ellipsis;
 }
 
+/* Row holding the room name plus the (optional) thread collapse/expand toggle */
+.roomNameRow {
+    display: flex;
+    align-items: center;
+    gap: var(--cpd-space-1x);
+    min-width: 0;
+}
+
+.threadsToggle {
+    /* Remove button default style */
+    background: unset;
+    border: none;
+
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    color: var(--cpd-color-icon-secondary);
+}
+
+.threadsToggle:hover,
+.threadsToggle:focus-visible {
+    color: var(--cpd-color-icon-primary);
+}
+
+.threadsToggle svg {
+    width: 16px;
+    height: 16px;
+    fill: currentcolor;
+}
+
 .selected {
     .container {
         background-color: var(--cpd-color-bg-action-tertiary-selected);

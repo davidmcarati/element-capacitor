@@ -14,10 +14,10 @@ import {
     type RoomListItemViewActions,
     type Section,
 } from "@element-hq/web-shared-components";
-import { RoomEvent, ThreadEvent } from "matrix-js-sdk/src/matrix";
+import { ReceiptType, RoomEvent, ThreadEvent } from "matrix-js-sdk/src/matrix";
 import { CallType } from "matrix-js-sdk/src/webrtc/call";
 
-import type { Room, MatrixClient, RoomMember } from "matrix-js-sdk/src/matrix";
+import type { Room, MatrixClient, RoomMember, Thread } from "matrix-js-sdk/src/matrix";
 import type { RoomNotificationState } from "../../stores/notifications/RoomNotificationState";
 import { RoomNotificationStateStore } from "../../stores/notifications/RoomNotificationStateStore";
 import { NotificationStateEvents } from "../../stores/notifications/NotificationState";
@@ -64,6 +64,13 @@ export class RoomListItemViewModel
      * Track the current call for this room to manager listeners
      */
     private currentCall: Call | null = null;
+
+    /**
+     * Rooms whose active-thread list the user has collapsed. Kept at the class level so the
+     * preference survives this view model being disposed and recreated as rooms scroll in and
+     * out of the virtualized list.
+     */
+    private static readonly collapsedRooms = new Set<string>();
 
     public constructor(props: RoomItemProps) {
         // Get notification state first so we can generate a complete initial snapshot
@@ -371,6 +378,7 @@ export class RoomListItemViewModel
             roomNotifState,
             sections,
             activeThreads: RoomListItemViewModel.computeActiveThreads(room),
+            threadsCollapsed: RoomListItemViewModel.collapsedRooms.has(room.roomId),
         };
     }
 
@@ -447,8 +455,9 @@ export class RoomListItemViewModel
     };
 
     public onOpenThread = (threadId: string): void => {
-        const rootEvent = this.props.room.getThread(threadId)?.rootEvent;
-        if (!rootEvent) return;
+        const thread = this.props.room.getThread(threadId);
+        const rootEvent = thread?.rootEvent;
+        if (!thread || !rootEvent) return;
 
         // Switch to the room and open the thread once the room view is ready. Dispatching ShowThread
         // right after ViewRoom races with ViewRoom's asynchronous room switch: the thread card would
@@ -466,6 +475,39 @@ export class RoomListItemViewModel
                 push: true,
             } satisfies ShowThreadPayload,
         });
+
+        // Opening a thread from the list should clear its notification like opening a room does.
+        // The thread panel's own read-receipt logic can lag (or not fire when the panel is not the
+        // focused timeline), leaving a stale badge on the row, so mark it read proactively here.
+        void this.markThreadRead(thread);
+    };
+
+    /**
+     * Send a read receipt for the thread's most recent event so its notification badge clears.
+     * Uses a private receipt when the user has disabled sending read receipts.
+     */
+    private async markThreadRead(thread: Thread): Promise<void> {
+        const lastEvent = thread.replyToEvent ?? thread.events.at(-1) ?? thread.rootEvent;
+        if (!lastEvent) return;
+        try {
+            const receiptType = SettingsStore.getValue("sendReadReceipts", this.props.room.roomId)
+                ? ReceiptType.Read
+                : ReceiptType.ReadPrivate;
+            await this.props.client.sendReadReceipt(lastEvent, receiptType);
+        } catch {
+            // Best-effort: if the receipt fails to send we simply leave the badge as-is.
+        }
+    }
+
+    public onToggleThreadsCollapsed = (): void => {
+        const roomId = this.props.room.roomId;
+        const collapsed = !RoomListItemViewModel.collapsedRooms.has(roomId);
+        if (collapsed) {
+            RoomListItemViewModel.collapsedRooms.add(roomId);
+        } else {
+            RoomListItemViewModel.collapsedRooms.delete(roomId);
+        }
+        this.snapshot.merge({ threadsCollapsed: collapsed });
     };
 
     public onMarkAsRead = async (): Promise<void> => {

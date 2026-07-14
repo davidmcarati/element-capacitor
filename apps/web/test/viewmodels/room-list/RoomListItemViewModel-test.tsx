@@ -815,6 +815,26 @@ describe("RoomListItemViewModel", () => {
 
             expect(viewModel.getSnapshot().activeThreads).toEqual([]);
         });
+
+        it("should toggle the collapsed state of the thread list", () => {
+            const now = Date.now();
+            jest.spyOn(room, "getThreads").mockReturnValue([makeThread("$t:server", now - 1 * DAY_MS, "Thread")]);
+
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+
+            expect(viewModel.getSnapshot().threadsCollapsed).toBe(false);
+
+            viewModel.onToggleThreadsCollapsed();
+            expect(viewModel.getSnapshot().threadsCollapsed).toBe(true);
+
+            // The preference survives the view model being recreated (rooms scrolling in/out).
+            viewModel.dispose();
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+            expect(viewModel.getSnapshot().threadsCollapsed).toBe(true);
+
+            viewModel.onToggleThreadsCollapsed();
+            expect(viewModel.getSnapshot().threadsCollapsed).toBe(false);
+        });
     });
 
     describe("Cleanup", () => {

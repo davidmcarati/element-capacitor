@@ -31,6 +31,7 @@ type RoomListItemProps = RoomListItemViewSnapshot &
 const RoomListItemWrapperImpl = ({
     onOpenRoom,
     onOpenThread,
+    onToggleThreadsCollapsed,
     onMarkAsRead,
     onMarkAsUnread,
     onToggleFavorite,
@@ -53,6 +54,7 @@ const RoomListItemWrapperImpl = ({
     const vm = useMockedViewModel(rest, {
         onOpenRoom,
         onOpenThread,
+        onToggleThreadsCollapsed,
         onMarkAsRead,
         onMarkAsUnread,
         onToggleFavorite,

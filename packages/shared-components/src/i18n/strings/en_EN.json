@@ -192,6 +192,8 @@
             "space_settings": "Space settings"
         },
         "threads": {
+            "collapse": "Hide threads",
+            "expand": "Show threads",
             "open_thread": "Open thread: %(threadName)s",
             "show_less": "Show fewer threads",
             "show_n_more": {
