@@ -30,6 +30,7 @@ type RoomListItemProps = RoomListItemViewSnapshot &
 // Wrapper component that creates a mocked ViewModel
 const RoomListItemWrapperImpl = ({
     onOpenRoom,
+    onOpenThread,
     onMarkAsRead,
     onMarkAsUnread,
     onToggleFavorite,
@@ -51,6 +52,7 @@ const RoomListItemWrapperImpl = ({
 }: RoomListItemProps): JSX.Element => {
     const vm = useMockedViewModel(rest, {
         onOpenRoom,
+        onOpenThread,
         onMarkAsRead,
         onMarkAsUnread,
         onToggleFavorite,
@@ -293,6 +295,71 @@ export const WithZoom: Story = {
             </div>
         ),
     ],
+};
+
+const noThreadNotification = {
+    hasAnyNotificationOrActivity: false,
+    isUnsentMessage: false,
+    invited: false,
+    isMention: false,
+    isActivityNotification: false,
+    isNotification: false,
+    hasUnreadCount: false,
+    count: 0,
+    muted: false,
+};
+
+export const WithActiveThreads: Story = {
+    args: {
+        isBold: true,
+        activeThreads: [
+            {
+                id: "$thread1",
+                name: "Lunch plans for Friday",
+                notification: {
+                    ...noThreadNotification,
+                    hasAnyNotificationOrActivity: true,
+                    isNotification: true,
+                    hasUnreadCount: true,
+                    count: 4,
+                },
+            },
+            {
+                id: "$thread2",
+                name: "Design review feedback",
+                notification: {
+                    ...noThreadNotification,
+                    hasAnyNotificationOrActivity: true,
+                    isMention: true,
+                    hasUnreadCount: true,
+                    count: 1,
+                },
+            },
+            {
+                id: "$thread3",
+                name: "Release 1.2 checklist",
+                notification: {
+                    ...noThreadNotification,
+                    hasAnyNotificationOrActivity: true,
+                    isActivityNotification: true,
+                },
+            },
+            { id: "$thread4", name: "Read thread with no activity", notification: { ...noThreadNotification } },
+        ],
+    },
+};
+
+export const WithManyActiveThreads: Story = {
+    args: {
+        activeThreads: Array.from({ length: 8 }, (_, i) => ({
+            id: `$thread${i}`,
+            name: `Thread number ${i + 1}`,
+            notification:
+                i === 0
+                    ? { ...noThreadNotification, hasAnyNotificationOrActivity: true, isActivityNotification: true }
+                    : { ...noThreadNotification },
+        })),
+    },
 };
 
 export const FirstItem: Story = {

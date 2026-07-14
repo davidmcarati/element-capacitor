@@ -8,11 +8,13 @@ Please see LICENSE files in the repository root for full details.
 import {
     BaseViewModel,
     RoomNotifState,
+    type ActiveThreadItem,
+    type NotificationDecorationData,
     type RoomListItemViewSnapshot,
     type RoomListItemViewActions,
     type Section,
 } from "@element-hq/web-shared-components";
-import { RoomEvent } from "matrix-js-sdk/src/matrix";
+import { RoomEvent, ThreadEvent } from "matrix-js-sdk/src/matrix";
 import { CallType } from "matrix-js-sdk/src/webrtc/call";
 
 import type { Room, MatrixClient, RoomMember } from "matrix-js-sdk/src/matrix";
@@ -26,7 +28,7 @@ import SettingsStore from "../../settings/SettingsStore";
 import { NotificationLevel } from "../../stores/notifications/NotificationLevel";
 import { hasAccessToNotificationMenu, hasAccessToOptionsMenu } from "./utils";
 import { EchoChamber } from "../../stores/local-echo/EchoChamber";
-import { RoomNotifState as ElementRoomNotifState } from "../../RoomNotifs";
+import { determineUnreadState, RoomNotifState as ElementRoomNotifState } from "../../RoomNotifs";
 import { shouldShowComponent } from "../../customisations/helpers/UIComponents";
 import { UIComponent } from "../../settings/UIFeature";
 import { CallStore, CallStoreEvent } from "../../stores/CallStore";
@@ -36,6 +38,7 @@ import { keepIfSame } from "../../utils/keepIfSame";
 import dispatcher from "../../dispatcher/dispatcher";
 import { Action } from "../../dispatcher/actions";
 import type { ViewRoomPayload } from "../../dispatcher/payloads/ViewRoomPayload";
+import type { ShowThreadPayload } from "../../dispatcher/payloads/ShowThreadPayload";
 import PosthogTrackers from "../../PosthogTrackers";
 import { type Call, CallEvent } from "../../models/Call";
 import RoomListStoreV3 from "../../stores/room-list-v3/RoomListStoreV3";
@@ -98,6 +101,27 @@ export class RoomListItemViewModel
         // Subscribe to room-specific events
         this.disposables.trackListener(props.room, RoomEvent.Name, this.onRoomChanged);
         this.disposables.trackListener(props.room, RoomEvent.Tags, this.onRoomChanged);
+
+        // Subscribe to thread activity so the list of active threads under the room stays up to date
+        this.disposables.trackListener(props.room, ThreadEvent.New, this.onThreadsChanged);
+        this.disposables.trackListener(props.room, ThreadEvent.Update, this.onThreadsChanged);
+        this.disposables.trackListener(props.room, ThreadEvent.NewReply, this.onThreadsChanged);
+        this.disposables.trackListener(props.room, ThreadEvent.Delete, this.onThreadsChanged);
+        // Also refresh when notification/read state changes, so per-thread badges stay accurate
+        this.disposables.trackListener(props.room, RoomEvent.Receipt, this.onThreadsChanged);
+        this.disposables.trackListener(props.room, RoomEvent.UnreadNotifications, this.onThreadsChanged);
+        this.disposables.trackListener(props.room, RoomEvent.Timeline, this.onThreadsChanged);
+        this.disposables.trackListener(props.room, RoomEvent.Redaction, this.onThreadsChanged);
+
+        // Recompute the active window when the setting changes
+        const activeThreadDaysRef = SettingsStore.watchSetting("activeThreadDays", null, this.onThreadsChanged);
+        this.disposables.track(() => {
+            SettingsStore.unwatchSetting(activeThreadDaysRef);
+        });
+
+        // Threads are only known to the client once they have been fetched. Lazily populate them for
+        // this room (this VM is only created for rooms that are visible in the list).
+        void this.ensureThreadsLoaded();
 
         const orderSectionsRef = SettingsStore.watchSetting("RoomList.OrderedCustomSections", null, () =>
             this.onOrderedCustomSectionsChange(),
@@ -182,6 +206,32 @@ export class RoomListItemViewModel
         this.updateItem();
     };
 
+    private onThreadsChanged = (): void => {
+        this.snapshot.merge({
+            activeThreads: keepIfSame(
+                this.snapshot.current.activeThreads,
+                RoomListItemViewModel.computeActiveThreads(this.props.room),
+            ),
+        });
+    };
+
+    /**
+     * Ensure the client has loaded the threads for this room, so `room.getThreads()` returns them.
+     * Safe to call repeatedly: the SDK no-ops once threads are ready.
+     */
+    private async ensureThreadsLoaded(): Promise<void> {
+        const room = this.props.room;
+        if (!room.client.supportsThreads()) return;
+        try {
+            await room.createThreadsTimelineSets();
+            await room.fetchRoomThreads();
+        } catch {
+            // Ignore fetch failures - we simply won't show threads for this room
+            return;
+        }
+        this.onThreadsChanged();
+    }
+
     /**
      * Update the item snapshot with current sync data.
      * Preserves the message preview which is managed separately.
@@ -192,6 +242,7 @@ export class RoomListItemViewModel
             ...newItem,
             notification: keepIfSame(this.snapshot.current.notification, newItem.notification),
             sections: keepIfSame(this.snapshot.current.sections, newItem.sections),
+            activeThreads: keepIfSame(this.snapshot.current.activeThreads, newItem.activeThreads),
             // Preserve message preview - it's managed separately by loadAndSetMessagePreview
             messagePreview: this.snapshot.current.messagePreview,
         });
@@ -319,6 +370,71 @@ export class RoomListItemViewModel
             canMarkAsUnread,
             roomNotifState,
             sections,
+            activeThreads: RoomListItemViewModel.computeActiveThreads(room),
+        };
+    }
+
+    /**
+     * Compute the list of "active" threads for a room: threads whose most recent message is within
+     * the configured number of days. Sorted by most recent activity first.
+     */
+    private static computeActiveThreads(room: Room): ActiveThreadItem[] {
+        const days = SettingsStore.getValue("activeThreadDays") ?? 3;
+        // A value of 0 (or negative) disables the feature
+        if (days <= 0) return [];
+
+        const thresholdMs = days * 24 * 60 * 60 * 1000;
+        const now = Date.now();
+
+        const activeThreads = room
+            .getThreads()
+            .map((thread) => {
+                const lastEvent = thread.replyToEvent ?? thread.events.at(-1) ?? thread.rootEvent;
+                const lastTs = lastEvent?.getTs() ?? 0;
+                return { thread, lastTs };
+            })
+            .filter(({ lastTs }) => lastTs > 0 && now - lastTs <= thresholdMs)
+            .sort((a, b) => b.lastTs - a.lastTs)
+            .map(({ thread }): ActiveThreadItem => {
+                const rootEvent = thread.rootEvent;
+                const name =
+                    (rootEvent ? MessagePreviewStore.instance.generatePreviewForEvent(rootEvent) : "") ||
+                    rootEvent?.getContent().body ||
+                    _t("common|thread");
+                return {
+                    id: thread.id,
+                    name,
+                    notification: RoomListItemViewModel.computeThreadNotification(room, thread.id),
+                };
+            });
+
+        return activeThreads;
+    }
+
+    /**
+     * Build the notification decoration for a single thread, mirroring how a room's decoration is
+     * derived from its notification level so threads show the same badges/dots as channels.
+     */
+    private static computeThreadNotification(room: Room, threadId: string): NotificationDecorationData {
+        const { level, count, invited, symbol } = determineUnreadState(room, threadId, false);
+
+        // Mirrors RoomNotificationState.hasAnyNotificationOrActivity: activity counts unless the
+        // feature_hidebold labs flag hides it, and anything at or above Notification always counts.
+        const hideBold = SettingsStore.getValue("feature_hidebold");
+        const hasAnyNotificationOrActivity =
+            (!hideBold && level === NotificationLevel.Activity) || level >= NotificationLevel.Notification;
+
+        return {
+            hasAnyNotificationOrActivity,
+            isUnsentMessage: level === NotificationLevel.Unsent,
+            invited,
+            isMention: !invited && level === NotificationLevel.Highlight,
+            isActivityNotification: level === NotificationLevel.Activity,
+            isNotification: level === NotificationLevel.Notification,
+            hasUnreadCount: level >= NotificationLevel.Notification && (!!count || !!symbol),
+            count,
+            // Per-thread mute icons would be noisy; the room row already shows the mute state.
+            muted: false,
         };
     }
 
@@ -327,6 +443,28 @@ export class RoomListItemViewModel
             action: Action.ViewRoom,
             room_id: this.props.room.roomId,
             metricsTrigger: "RoomList",
+        });
+    };
+
+    public onOpenThread = (threadId: string): void => {
+        const rootEvent = this.props.room.getThread(threadId)?.rootEvent;
+        if (!rootEvent) return;
+
+        // Switch to the room and open the thread once the room view is ready. Dispatching ShowThread
+        // right after ViewRoom races with ViewRoom's asynchronous room switch: the thread card would
+        // be applied to the previously-active room's right panel and discarded when the room actually
+        // changes, so the click appears to only open the channel (and a second click is needed).
+        // `deferred_action` is dispatched by MatrixChat only after `viewRoom` has resolved, so the
+        // thread reliably opens in the correct room.
+        dispatcher.dispatch<ViewRoomPayload>({
+            action: Action.ViewRoom,
+            room_id: this.props.room.roomId,
+            metricsTrigger: "RoomList",
+            deferred_action: {
+                action: Action.ShowThread,
+                rootEvent,
+                push: true,
+            } satisfies ShowThreadPayload,
         });
     };
 

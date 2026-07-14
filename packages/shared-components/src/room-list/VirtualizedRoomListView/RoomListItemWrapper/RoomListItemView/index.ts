@@ -7,6 +7,7 @@
 
 export { RoomListItemView } from "./RoomListItemView";
 export type {
+    ActiveThreadItem,
     Room,
     RoomListItemViewSnapshot,
     RoomListItemViewModel,
@@ -14,6 +15,8 @@ export type {
     RoomListItemViewProps,
     Section,
 } from "./RoomListItemView";
+export { RoomListItemThreads } from "./RoomListItemThreads";
+export type { RoomListItemThreadsProps } from "./RoomListItemThreads";
 export { RoomListItemContent } from "./RoomListItemContent";
 export type { RoomListItemContentProps } from "./RoomListItemContent";
 export { RoomListItemNotificationMenu } from "./RoomListItemNotificationMenu";

@@ -41,6 +41,7 @@ interface IState {
     timezone: string | undefined;
     timezones: string[];
     autocompleteDelay: string;
+    activeThreadDays: string;
     readMarkerInViewThresholdMs: string;
     readMarkerOutOfViewThresholdMs: string;
 }
@@ -174,6 +175,7 @@ export default class PreferencesUserSettingsTab extends React.Component<EmptyObj
             timezone: TimezoneHandler.getUserTimezone(),
             timezones: TimezoneHandler.getAllTimezones(),
             autocompleteDelay: SettingsStore.getValueAt(SettingLevel.DEVICE, "autocompleteDelay").toString(10),
+            activeThreadDays: SettingsStore.getValueAt(SettingLevel.ACCOUNT, "activeThreadDays").toString(10),
             readMarkerInViewThresholdMs: SettingsStore.getValueAt(
                 SettingLevel.DEVICE,
                 "readMarkerInViewThresholdMs",
@@ -207,6 +209,11 @@ export default class PreferencesUserSettingsTab extends React.Component<EmptyObj
     private onAutocompleteDelayChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
         this.setState({ autocompleteDelay: e.target.value });
         SettingsStore.setValue("autocompleteDelay", null, SettingLevel.DEVICE, e.target.valueAsNumber);
+    };
+
+    private onActiveThreadDaysChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+        this.setState({ activeThreadDays: e.target.value });
+        SettingsStore.setValue("activeThreadDays", null, SettingLevel.ACCOUNT, e.target.valueAsNumber);
     };
 
     private onReadMarkerInViewThresholdMs = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -360,6 +367,13 @@ export default class PreferencesUserSettingsTab extends React.Component<EmptyObj
 
                     <SettingsSubsection heading={_t("common|timeline")} formWrap>
                         {this.renderGroup(PreferencesUserSettingsTab.TIMELINE_SETTINGS)}
+                        <Field
+                            label={_t("settings|preferences|active_thread_days")}
+                            type="number"
+                            min={0}
+                            value={this.state.activeThreadDays}
+                            onChange={this.onActiveThreadDaysChange}
+                        />
                     </SettingsSubsection>
 
                     <SettingsSubsection heading={_t("common|moderation_and_safety")} legacy={false}>

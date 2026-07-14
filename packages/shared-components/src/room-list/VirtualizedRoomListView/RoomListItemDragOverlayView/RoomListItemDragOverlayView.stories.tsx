@@ -27,6 +27,7 @@ type RoomListItemDragOverlayProps = RoomListItemViewSnapshot &
 
 const RoomListItemDragOverlayWrapperImpl = ({
     onOpenRoom,
+    onOpenThread,
     onMarkAsRead,
     onMarkAsUnread,
     onToggleFavorite,
@@ -43,6 +44,7 @@ const RoomListItemDragOverlayWrapperImpl = ({
 }: RoomListItemDragOverlayProps): JSX.Element => {
     const vm = useMockedViewModel(rest, {
         onOpenRoom,
+        onOpenThread,
         onMarkAsRead,
         onMarkAsUnread,
         onToggleFavorite,

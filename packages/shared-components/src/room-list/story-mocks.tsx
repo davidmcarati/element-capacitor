@@ -106,6 +106,7 @@ export const createMockRoomSnapshot = (id: string, name: string, index: number):
     canMarkAsUnread: true,
     roomNotifState: RoomNotifState.AllMessages,
     sections: [],
+    activeThreads: [],
 });
 
 export function createMockRoomItemViewModel(roomId: string, name: string, index: number): RoomListItemViewModel {
@@ -114,6 +115,7 @@ export function createMockRoomItemViewModel(roomId: string, name: string, index:
         getSnapshot: () => snapshot,
         subscribe: fn(),
         onOpenRoom: fn(),
+        onOpenThread: fn(),
         onMarkAsRead: fn(),
         onMarkAsUnread: fn(),
         onToggleFavorite: fn(),

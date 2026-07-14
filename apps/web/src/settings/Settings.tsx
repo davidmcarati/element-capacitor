@@ -306,6 +306,7 @@ export interface Settings {
     "deviceClientInformationOptIn": IBaseSetting<boolean>;
     "Registration.mobileRegistrationHelper": IBaseSetting<boolean>;
     "autocompleteDelay": IBaseSetting<number>;
+    "activeThreadDays": IBaseSetting<number>;
     "readMarkerInViewThresholdMs": IBaseSetting<number>;
     "readMarkerOutOfViewThresholdMs": IBaseSetting<number>;
     "blacklistUnverifiedDevices": IBaseSetting<boolean>;
@@ -1121,6 +1122,11 @@ export const SETTINGS: Settings = {
     "autocompleteDelay": {
         supportedLevels: LEVELS_DEVICE_ONLY_SETTINGS_WITH_CONFIG,
         default: 200,
+    },
+    "activeThreadDays": {
+        supportedLevels: LEVELS_ACCOUNT_SETTINGS,
+        displayName: _td("settings|preferences|active_thread_days"),
+        default: 3,
     },
     "readMarkerInViewThresholdMs": {
         supportedLevels: LEVELS_DEVICE_ONLY_SETTINGS_WITH_CONFIG,

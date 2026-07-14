@@ -11,6 +11,7 @@ import { type RoomListItemViewActions } from "./RoomListItemView";
 
 export const mockedActions: RoomListItemViewActions = {
     onOpenRoom: fn(),
+    onOpenThread: fn(),
     onMarkAsRead: fn(),
     onMarkAsUnread: fn(),
     onToggleFavorite: fn(),

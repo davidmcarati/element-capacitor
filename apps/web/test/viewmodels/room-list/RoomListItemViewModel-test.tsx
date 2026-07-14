@@ -33,10 +33,17 @@ import { RoomListItemViewModel } from "../../../src/viewmodels/room-list/RoomLis
 import RoomListStoreV3 from "../../../src/stores/room-list-v3/RoomListStoreV3";
 import * as tagRoomModule from "../../../src/utils/room/tagRoom";
 import { CHATS_TAG } from "../../../src/stores/room-list-v3/section";
+import { determineUnreadState } from "../../../src/RoomNotifs";
+import { NotificationLevel } from "../../../src/stores/notifications/NotificationLevel";
 
 jest.mock("../../../src/viewmodels/room-list/utils", () => ({
     hasAccessToOptionsMenu: jest.fn().mockReturnValue(true),
     hasAccessToNotificationMenu: jest.fn().mockReturnValue(true),
+}));
+
+jest.mock("../../../src/RoomNotifs", () => ({
+    ...jest.requireActual("../../../src/RoomNotifs"),
+    determineUnreadState: jest.fn(() => ({ level: 1, symbol: null, count: 0, invited: false })),
 }));
 
 jest.mock("../../../src/stores/CallStore", () => ({
@@ -530,6 +537,38 @@ describe("RoomListItemViewModel", () => {
             expect(viewModel.getSnapshot().room).toBe(room);
         });
 
+        it("should dispatch view room and show thread actions on openThread", () => {
+            const rootEvent = { getId: () => "$root:server" } as unknown as MatrixEvent;
+            jest.spyOn(room, "getThread").mockReturnValue({ rootEvent } as any);
+
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+            const dispatchSpy = jest.spyOn(dispatcher, "dispatch");
+
+            viewModel.onOpenThread("$root:server");
+
+            expect(dispatchSpy).toHaveBeenCalledWith({
+                action: Action.ViewRoom,
+                room_id: "!room:server",
+                metricsTrigger: "RoomList",
+            });
+            expect(dispatchSpy).toHaveBeenCalledWith({
+                action: Action.ShowThread,
+                rootEvent,
+                push: true,
+            });
+        });
+
+        it("should not dispatch when the thread root cannot be found on openThread", () => {
+            jest.spyOn(room, "getThread").mockReturnValue(null);
+
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+            const dispatchSpy = jest.spyOn(dispatcher, "dispatch");
+
+            viewModel.onOpenThread("$missing:server");
+
+            expect(dispatchSpy).not.toHaveBeenCalled();
+        });
+
         it("should dispatch view_invite action when onInvite is called", () => {
             viewModel = new RoomListItemViewModel({ room, client: matrixClient });
             const dispatchSpy = jest.spyOn(dispatcher, "dispatch");
@@ -663,6 +702,118 @@ describe("RoomListItemViewModel", () => {
             watchCallback("RoomList.OrderedCustomSections", null, null as any, null, null);
 
             expect(viewModel.getSnapshot().sections.map((s) => s.tag)).toEqual([]);
+        });
+    });
+
+    describe("Active threads", () => {
+        const DAY_MS = 24 * 60 * 60 * 1000;
+
+        const makeThread = (id: string, lastTs: number, body: string): any => ({
+            id,
+            rootEvent: {
+                getTs: () => lastTs,
+                getContent: () => ({ body }),
+            },
+            replyToEvent: { getTs: () => lastTs },
+            events: [],
+            timeline: [],
+        });
+
+        beforeEach(() => {
+            (determineUnreadState as jest.Mock).mockReturnValue({
+                level: NotificationLevel.None,
+                symbol: null,
+                count: 0,
+                invited: false,
+            });
+            jest.spyOn(SettingsStore, "getValue").mockImplementation((setting) => {
+                if (setting === "activeThreadDays") return 3;
+                if (setting === "RoomList.showMessagePreview") return false;
+                if (setting === "RoomList.OrderedCustomSections") return [];
+                if (setting === "RoomList.CustomSectionData") return {};
+                return false;
+            });
+            jest.spyOn(MessagePreviewStore.instance, "generatePreviewForEvent").mockImplementation(
+                (event) => event.getContent().body,
+            );
+        });
+
+        it("should only include threads active within the configured number of days", () => {
+            const now = Date.now();
+            jest.spyOn(room, "getThreads").mockReturnValue([
+                makeThread("$recent:server", now - 1 * DAY_MS, "Recent thread"),
+                makeThread("$old:server", now - 10 * DAY_MS, "Old thread"),
+            ]);
+
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+
+            const activeThreads = viewModel.getSnapshot().activeThreads;
+            expect(activeThreads).toHaveLength(1);
+            expect(activeThreads[0].id).toBe("$recent:server");
+            expect(activeThreads[0].name).toBe("Recent thread");
+            expect(activeThreads[0].notification.hasAnyNotificationOrActivity).toBe(false);
+        });
+
+        it("should sort active threads by most recent activity first", () => {
+            const now = Date.now();
+            jest.spyOn(room, "getThreads").mockReturnValue([
+                makeThread("$older:server", now - 2 * DAY_MS, "Older"),
+                makeThread("$newer:server", now - 1 * DAY_MS, "Newer"),
+            ]);
+
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+
+            expect(viewModel.getSnapshot().activeThreads.map((t) => t.id)).toEqual(["$newer:server", "$older:server"]);
+        });
+
+        it("should reflect the mention notification state of a thread", () => {
+            const now = Date.now();
+            (determineUnreadState as jest.Mock).mockReturnValue({
+                level: NotificationLevel.Highlight,
+                symbol: null,
+                count: 2,
+                invited: false,
+            });
+            jest.spyOn(room, "getThreads").mockReturnValue([makeThread("$t:server", now - 1 * DAY_MS, "Thread")]);
+
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+
+            const notification = viewModel.getSnapshot().activeThreads[0].notification;
+            expect(notification.hasAnyNotificationOrActivity).toBe(true);
+            expect(notification.isMention).toBe(true);
+            expect(notification.hasUnreadCount).toBe(true);
+            expect(notification.count).toBe(2);
+        });
+
+        it("should reflect the activity (dot) notification state of a thread", () => {
+            const now = Date.now();
+            (determineUnreadState as jest.Mock).mockReturnValue({
+                level: NotificationLevel.Activity,
+                symbol: null,
+                count: 0,
+                invited: false,
+            });
+            jest.spyOn(room, "getThreads").mockReturnValue([makeThread("$t:server", now - 1 * DAY_MS, "Thread")]);
+
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+
+            const notification = viewModel.getSnapshot().activeThreads[0].notification;
+            expect(notification.isActivityNotification).toBe(true);
+            expect(notification.hasAnyNotificationOrActivity).toBe(true);
+            expect(notification.hasUnreadCount).toBe(false);
+        });
+
+        it("should not include any threads when the setting is zero", () => {
+            jest.spyOn(SettingsStore, "getValue").mockImplementation((setting) => {
+                if (setting === "activeThreadDays") return 0;
+                return false;
+            });
+            const now = Date.now();
+            jest.spyOn(room, "getThreads").mockReturnValue([makeThread("$t:server", now, "Thread")]);
+
+            viewModel = new RoomListItemViewModel({ room, client: matrixClient });
+
+            expect(viewModel.getSnapshot().activeThreads).toEqual([]);
         });
     });
 

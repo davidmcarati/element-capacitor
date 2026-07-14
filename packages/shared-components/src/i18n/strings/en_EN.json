@@ -191,6 +191,14 @@
             "home": "Space home",
             "space_settings": "Space settings"
         },
+        "threads": {
+            "open_thread": "Open thread: %(threadName)s",
+            "show_less": "Show fewer threads",
+            "show_n_more": {
+                "one": "Show %(count)s more thread",
+                "other": "Show %(count)s more threads"
+            }
+        },
         "unread_messages": "Unread messages"
     },
     "terms": {

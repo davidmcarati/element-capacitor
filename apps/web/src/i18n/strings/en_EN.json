@@ -2835,6 +2835,7 @@
         "preferences": {
             "Electron.enableContentProtection": "Prevent the window contents from being captured by other apps",
             "Electron.enableHardwareAcceleration": "Enable hardware acceleration (restart %(appName)s to take effect)",
+            "active_thread_days": "Show threads active within (days)",
             "always_show_menu_bar": "Always show the window menu bar",
             "autocomplete_delay": "Autocomplete delay (ms)",
             "code_blocks_heading": "Code blocks",

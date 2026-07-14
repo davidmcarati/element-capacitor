@@ -13,6 +13,7 @@ import { Flex } from "../../../../core/utils/Flex";
 import { type NotificationDecorationData } from "./NotificationDecoration";
 import { RoomListItemContextMenu } from "./RoomListItemContextMenu";
 import { RoomListItemContent } from "./RoomListItemContent";
+import { RoomListItemThreads } from "./RoomListItemThreads";
 import { type RoomNotifState } from "./RoomNotifs";
 import styles from "./RoomListItemView.module.css";
 import { useViewModel, type ViewModel } from "../../../../core/viewmodel";
@@ -58,6 +59,18 @@ export interface Section {
 }
 
 /**
+ * Describes a single active thread shown beneath a room in the room list.
+ */
+export interface ActiveThreadItem {
+    /** The thread root event id, used as the thread identifier */
+    id: string;
+    /** Display name for the thread (its root message preview) */
+    name: string;
+    /** Notification decoration data for the thread (unread count, mention, activity, etc.) */
+    notification: NotificationDecorationData;
+}
+
+/**
  * Snapshot for a room list item.
  * Contains all the data needed to render a room in the list.
  */
@@ -94,6 +107,8 @@ export interface RoomListItemViewSnapshot {
     roomNotifState: RoomNotifState;
     /** Available sections the room can be assigned to */
     sections: Section[];
+    /** Active threads (recent activity) to display beneath the room */
+    activeThreads: ActiveThreadItem[];
 }
 
 /**
@@ -103,6 +118,8 @@ export interface RoomListItemViewSnapshot {
 export interface RoomListItemViewActions {
     /** Called when the room should be opened */
     onOpenRoom: () => void;
+    /** Called when one of the room's active threads should be opened */
+    onOpenThread: (threadId: string) => void;
     /** Called when the room should be marked as read */
     onMarkAsRead: () => void;
     /** Called when the room should be marked as unread */
@@ -216,7 +233,7 @@ export const RoomListItemView = memo(function RoomListItemView({
     // Generate a11y label from notification state and room name
     const a11yLabel = getA11yLabel(item.name, item.notification);
 
-    return (
+    const roomButton = (
         <RoomListItemContextMenu vm={vm}>
             <Flex
                 as="button"
@@ -245,5 +262,16 @@ export const RoomListItemView = memo(function RoomListItemView({
                 <RoomListItemContent vm={vm} renderAvatar={renderAvatar} />
             </Flex>
         </RoomListItemContextMenu>
+    );
+
+    // Only wrap the row in a container when there are threads to show beneath it, so rooms without
+    // active threads keep their original single-button structure.
+    if (item.activeThreads.length === 0) return roomButton;
+
+    return (
+        <div className={styles.roomListItemWrapper}>
+            {roomButton}
+            <RoomListItemThreads vm={vm} />
+        </div>
     );
 });
