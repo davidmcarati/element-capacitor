@@ -494,7 +494,7 @@ export class RoomListItemViewModel
         const activeThreads = room
             .getThreads()
             .map((thread) => {
-                const lastEvent = thread.replyToEvent ?? thread.events.at(-1) ?? thread.rootEvent;
+                const lastEvent = thread.replyToEvent ?? thread.events?.at(-1) ?? thread.rootEvent;
                 const lastTs = lastEvent?.getTs() ?? 0;
                 return { thread, lastTs };
             })
@@ -584,7 +584,7 @@ export class RoomListItemViewModel
      * Uses a private receipt when the user has disabled sending read receipts.
      */
     private async markThreadRead(thread: Thread): Promise<void> {
-        const lastEvent = thread.replyToEvent ?? thread.events.at(-1) ?? thread.rootEvent;
+        const lastEvent = thread.replyToEvent ?? thread.events?.at(-1) ?? thread.rootEvent;
         if (!lastEvent) return;
         try {
             const receiptType = SettingsStore.getValue("sendReadReceipts", this.props.room.roomId)

@@ -551,15 +551,17 @@ describe("RoomListItemViewModel", () => {
 
             viewModel.onOpenThread("$root:server");
 
+            // ShowThread rides along as ViewRoom's deferred_action rather than as a second
+            // dispatch, so the thread opens against the room we are switching to (see onOpenThread).
             expect(dispatchSpy).toHaveBeenCalledWith({
                 action: Action.ViewRoom,
                 room_id: "!room:server",
                 metricsTrigger: "RoomList",
-            });
-            expect(dispatchSpy).toHaveBeenCalledWith({
-                action: Action.ShowThread,
-                rootEvent,
-                push: true,
+                deferred_action: {
+                    action: Action.ShowThread,
+                    rootEvent,
+                    push: true,
+                },
             });
         });
 
