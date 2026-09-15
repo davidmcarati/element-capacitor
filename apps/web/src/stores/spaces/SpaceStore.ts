@@ -1431,13 +1431,14 @@ export class SpaceStoreClass extends AsyncStoreWithClient<EmptyObject> {
 }
 
 export default class SpaceStore {
-    private static readonly internalInstance = (() => {
-        const instance = new SpaceStoreClass();
-        instance.start();
-        return instance;
-    })();
+    private static internalInstance?: SpaceStoreClass;
 
     public static get instance(): SpaceStoreClass {
+        if (!SpaceStore.internalInstance) {
+            // Assigned before start() so re-entrant access during startup cannot recurse.
+            SpaceStore.internalInstance = new SpaceStoreClass();
+            SpaceStore.internalInstance.start();
+        }
         return SpaceStore.internalInstance;
     }
 
@@ -1451,4 +1452,7 @@ export default class SpaceStore {
     }
 }
 
-window.mxSpaceStore = SpaceStore.instance;
+Object.defineProperty(window, "mxSpaceStore", {
+    get: () => SpaceStore.instance,
+    configurable: true,
+});

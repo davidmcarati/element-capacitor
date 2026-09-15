@@ -123,11 +123,7 @@ const mkMessagePreview = (text: string, event: MatrixEvent): MessagePreview => {
 };
 
 export class MessagePreviewStore extends AsyncStoreWithClient<EmptyObject> {
-    private static readonly internalInstance = (() => {
-        const instance = new MessagePreviewStore();
-        instance.start();
-        return instance;
-    })();
+    private static internalInstance?: MessagePreviewStore;
 
     /**
      * @internal Public for test only
@@ -144,6 +140,11 @@ export class MessagePreviewStore extends AsyncStoreWithClient<EmptyObject> {
     }
 
     public static get instance(): MessagePreviewStore {
+        if (!MessagePreviewStore.internalInstance) {
+            // Assigned before start() so re-entrant access during startup cannot recurse.
+            MessagePreviewStore.internalInstance = new MessagePreviewStore();
+            MessagePreviewStore.internalInstance.start();
+        }
         return MessagePreviewStore.internalInstance;
     }
 

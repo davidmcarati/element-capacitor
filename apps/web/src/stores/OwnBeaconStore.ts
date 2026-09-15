@@ -85,11 +85,7 @@ const getLocallyCreatedBeaconEventIds = (): string[] => {
     return ids;
 };
 export class OwnBeaconStore extends AsyncStoreWithClient<OwnBeaconStoreState> {
-    private static readonly internalInstance = (() => {
-        const instance = new OwnBeaconStore();
-        instance.start();
-        return instance;
-    })();
+    private static internalInstance?: OwnBeaconStore;
     // users beacons, keyed by event type
     public readonly beacons = new Map<BeaconIdentifier, Beacon>();
     public readonly beaconsByRoomId = new Map<Room["roomId"], Set<BeaconIdentifier>>();
@@ -123,6 +119,11 @@ export class OwnBeaconStore extends AsyncStoreWithClient<OwnBeaconStoreState> {
     }
 
     public static get instance(): OwnBeaconStore {
+        if (!OwnBeaconStore.internalInstance) {
+            // Assigned before start() so re-entrant access during startup cannot recurse.
+            OwnBeaconStore.internalInstance = new OwnBeaconStore();
+            OwnBeaconStore.internalInstance.start();
+        }
         return OwnBeaconStore.internalInstance;
     }
 

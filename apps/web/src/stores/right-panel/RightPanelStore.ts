@@ -455,4 +455,7 @@ export default class RightPanelStore extends ReadyWatchingStore {
     }
 }
 
-window.mxRightPanelStore = RightPanelStore.instance;
+Object.defineProperty(window, "mxRightPanelStore", {
+    get: () => RightPanelStore.instance,
+    configurable: true,
+});

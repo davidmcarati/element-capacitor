@@ -22,11 +22,7 @@ interface IState {
 }
 
 export class ModalWidgetStore extends AsyncStoreWithClient<IState> {
-    private static readonly internalInstance = (() => {
-        const instance = new ModalWidgetStore();
-        instance.start();
-        return instance;
-    })();
+    private static internalInstance?: ModalWidgetStore;
     private modalInstance: IHandle<typeof ModalWidgetDialog> | null = null;
     private openSourceWidgetId: string | null = null;
     private openSourceWidgetRoomId: string | null = null;
@@ -36,6 +32,11 @@ export class ModalWidgetStore extends AsyncStoreWithClient<IState> {
     }
 
     public static get instance(): ModalWidgetStore {
+        if (!ModalWidgetStore.internalInstance) {
+            // Assigned before start() so re-entrant access during startup cannot recurse.
+            ModalWidgetStore.internalInstance = new ModalWidgetStore();
+            ModalWidgetStore.internalInstance.start();
+        }
         return ModalWidgetStore.internalInstance;
     }
 
@@ -97,4 +98,7 @@ export class ModalWidgetStore extends AsyncStoreWithClient<IState> {
     };
 }
 
-window.mxModalWidgetStore = ModalWidgetStore.instance;
+Object.defineProperty(window, "mxModalWidgetStore", {
+    get: () => ModalWidgetStore.instance,
+    configurable: true,
+});

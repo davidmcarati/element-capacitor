@@ -38,11 +38,7 @@ const KEY_DISPLAY_NAME = "mx_profile_displayname";
 const KEY_AVATAR_URL = "mx_profile_avatar_url";
 
 export class OwnProfileStore extends AsyncStoreWithClient<IState> {
-    private static readonly internalInstance = (() => {
-        const instance = new OwnProfileStore();
-        instance.start();
-        return instance;
-    })();
+    private static internalInstance?: OwnProfileStore;
 
     private monitoredUser: User | null = null;
 
@@ -57,6 +53,11 @@ export class OwnProfileStore extends AsyncStoreWithClient<IState> {
     }
 
     public static get instance(): OwnProfileStore {
+        if (!OwnProfileStore.internalInstance) {
+            // Assigned before start() so re-entrant access during startup cannot recurse.
+            OwnProfileStore.internalInstance = new OwnProfileStore();
+            OwnProfileStore.internalInstance.start();
+        }
         return OwnProfileStore.internalInstance;
     }
 

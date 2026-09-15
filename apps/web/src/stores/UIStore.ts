@@ -97,4 +97,7 @@ export default class UIStore extends EventEmitter {
     };
 }
 
-window.mxUIStore = UIStore.instance;
+Object.defineProperty(window, "mxUIStore", {
+    get: () => UIStore.instance,
+    configurable: true,
+});

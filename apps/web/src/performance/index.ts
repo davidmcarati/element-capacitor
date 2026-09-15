@@ -162,5 +162,8 @@ export default class PerformanceMonitor {
 export { PerformanceEntryNames };
 
 // Exposing those to the window object to bridge them from tests
-window.mxPerformanceMonitor = PerformanceMonitor.instance;
+Object.defineProperty(window, "mxPerformanceMonitor", {
+    get: () => PerformanceMonitor.instance,
+    configurable: true,
+});
 window.mxPerformanceEntryNames = PerformanceEntryNames;

@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Capacitor — an Element fork tuned for daily use</title>
+<style>
+    :root {
+        --paper: #f6f8f7;
+        --card: #ffffff;
+        --ink: #182220;
+        --muted: #5c6b66;
+        --line: #d8e0dd;
+        --accent: #0e9c82;
+        --accent-ink: #0b7d69;
+        --charge: #de9b33;
+        --danger: #c94f4f;
+        --vignette-bg: #eef3f1;
+        --code-bg: #eaf0ee;
+        --shadow: 0 1px 2px rgba(24, 34, 32, 0.06), 0 8px 24px rgba(24, 34, 32, 0.07);
+    }
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+            --paper: #0f1614;
+            --card: #161f1c;
+            --ink: #e4ece9;
+            --muted: #8fa09a;
+            --line: #26322f;
+            --accent: #33d4b2;
+            --accent-ink: #4be0c0;
+            --charge: #e6ae55;
+            --danger: #e07070;
+            --vignette-bg: #121a18;
+            --code-bg: #1a2421;
+            --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+        }
+    }
+    :root[data-theme="dark"] {
+        --paper: #0f1614;
+        --card: #161f1c;
+        --ink: #e4ece9;
+        --muted: #8fa09a;
+        --line: #26322f;
+        --accent: #33d4b2;
+        --accent-ink: #4be0c0;
+        --charge: #e6ae55;
+        --danger: #e07070;
+        --vignette-bg: #121a18;
+        --code-bg: #1a2421;
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+        font-size: 16.5px;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+    }
+    .mono {
+        font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+    }
+    a { color: var(--accent-ink); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .wrap {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 0 24px 96px;
+    }
+
+    /* ---------- Hero ---------- */
+    header {
+        padding: 88px 0 40px;
+    }
+    .eyebrow {
+        font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent-ink);
+        margin: 0 0 20px;
+    }
+    h1 {
+        font-size: clamp(44px, 8vw, 76px);
+        font-weight: 800;
+        letter-spacing: -0.035em;
+        line-height: 1.02;
+        margin: 0 0 8px;
+        text-wrap: balance;
+    }
+    h1 .cap-symbol { color: var(--accent); }
+    .subtitle {
+        font-size: clamp(18px, 2.6vw, 22px);
+        color: var(--muted);
+        max-width: 34em;
+        margin: 16px 0 0;
+        text-wrap: balance;
+    }
+    .subtitle strong { color: var(--ink); font-weight: 600; }
+
+    .spec-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+        margin-top: 44px;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+    }
+    .spec {
+        flex: 1 1 140px;
+        padding: 16px 20px 14px;
+        border-right: 1px solid var(--line);
+    }
+    .spec:last-child { border-right: none; }
+    .spec b {
+        display: block;
+        font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+        font-size: 22px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.01em;
+    }
+    .spec span {
+        font-size: 12.5px;
+        color: var(--muted);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    /* ---------- Divider: capacitor symbol ---------- */
+    .divider {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        margin: 72px 0 0;
+        color: var(--line);
+    }
+    .divider svg { flex: 0 0 auto; display: block; }
+    .divider::before, .divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--line);
+    }
+    .divider .plates { stroke: var(--accent); }
+    .divider .lead { stroke: var(--line); }
+
+    /* ---------- Sections ---------- */
+    section { padding-top: 40px; }
+    .section-label {
+        font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0 0 10px;
+    }
+    .section-label em { color: var(--accent-ink); font-style: normal; }
+    h2 {
+        font-size: clamp(26px, 4vw, 34px);
+        font-weight: 750;
+        letter-spacing: -0.025em;
+        line-height: 1.15;
+        margin: 0 0 14px;
+        text-wrap: balance;
+    }
+    h3 {
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin: 0 0 8px;
+    }
+    p { margin: 0 0 14px; max-width: 62ch; }
+    .lede { font-size: 18px; color: var(--muted); max-width: 58ch; }
+    .lede strong { color: var(--ink); }
+
+    .feature {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+        gap: 40px;
+        align-items: start;
+        margin-top: 40px;
+    }
+    .feature.flip { grid-template-columns: minmax(0, 340px) minmax(0, 1fr); }
+    .feature.flip .vignette { order: -1; }
+    @media (max-width: 720px) {
+        .feature, .feature.flip { grid-template-columns: 1fr; }
+        .feature.flip .vignette { order: 0; }
+    }
+
+    .why-list { margin: 24px 0 0; padding: 0; list-style: none; display: grid; gap: 18px; }
+    .why-list li {
+        padding-left: 22px;
+        position: relative;
+        max-width: 62ch;
+    }
+    .why-list li::before {
+        content: "";
+        position: absolute;
+        left: 0; top: 0.62em;
+        width: 10px; height: 3px;
+        background: var(--accent);
+    }
+    .why-list b { font-weight: 700; }
+
+    ul.plain { padding-left: 20px; margin: 0 0 14px; max-width: 60ch; }
+    ul.plain li { margin-bottom: 8px; }
+    ul.plain li::marker { color: var(--accent); }
+
+    code {
+        font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+        font-size: 0.86em;
+        background: var(--code-bg);
+        border-radius: 4px;
+        padding: 0.12em 0.4em;
+    }
+    pre {
+        background: var(--code-bg);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-size: 13.5px;
+        line-height: 1.55;
+        max-width: 100%;
+    }
+    pre code { background: none; padding: 0; }
+
+    /* ---------- Vignettes (CSS-drawn UI) ---------- */
+    .vignette {
+        background: var(--vignette-bg);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: var(--shadow);
+    }
+    .vignette-caption {
+        font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: 14px;
+        text-align: center;
+    }
+    .ui {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 8px;
+        font-size: 13px;
+        line-height: 1.4;
+    }
+    .ui-section-label {
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding: 8px 8px 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 8px;
+        border-radius: 6px;
+    }
+    .row.active { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+    .row .av {
+        width: 24px; height: 24px;
+        border-radius: 6px;
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        position: relative;
+    }
+    .row .av.round { border-radius: 50%; }
+    .av.c1 { background: #4f7fd9; } .av.c2 { background: #b0653f; }
+    .av.c3 { background: #7d5fc2; } .av.c4 { background: #3f8f5f; }
+    .av.c5 { background: #c2527d; }
+    .presence {
+        position: absolute;
+        right: -2px; bottom: -2px;
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: #2eb872;
+        border: 2px solid var(--card);
+    }
+    .row .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+    .row .name.dim { color: var(--muted); font-weight: 400; }
+    .badge {
+        min-width: 17px; height: 17px;
+        border-radius: 9px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 10.5px;
+        font-weight: 700;
+        display: grid;
+        place-items: center;
+        padding: 0 5px;
+        font-variant-numeric: tabular-nums;
+    }
+    .grip { color: var(--line); font-size: 12px; letter-spacing: 1px; cursor: grab; user-select: none; }
+    .chev { color: var(--muted); font-size: 10px; width: 12px; text-align: center; flex: 0 0 auto; }
+
+    .thread-list { margin: 2px 0 4px; padding-left: 26px; display: grid; gap: 1px; }
+    .thread-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 3px 8px 3px 10px;
+        border-left: 2px solid var(--line);
+        color: var(--muted);
+        font-size: 12.5px;
+        border-radius: 0 6px 6px 0;
+    }
+    .thread-row.unread { color: var(--ink); font-weight: 600; border-left-color: var(--accent); }
+    .thread-row .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: auto; flex: 0 0 auto; }
+    .thread-more {
+        padding: 3px 8px 3px 10px;
+        border-left: 2px solid transparent;
+        color: var(--accent-ink);
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    /* GIF picker vignette */
+    .composer {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 7px 12px;
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 13px;
+        background: var(--card);
+    }
+    .composer .icons { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+    .icon-pill {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        border: 1.5px solid var(--muted);
+        border-radius: 5px;
+        color: var(--muted);
+        padding: 1px 4px;
+    }
+    .icon-pill.on { border-color: var(--accent); color: var(--accent-ink); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+    .gif-search {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--vignette-bg);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 6px 10px;
+        color: var(--muted);
+        font-size: 12.5px;
+        margin-bottom: 10px;
+    }
+    .gif-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+    .gif-grid .g {
+        border-radius: 6px;
+        aspect-ratio: 4 / 3;
+    }
+    .g1 { background: linear-gradient(135deg, #4f7fd9, #7d5fc2); }
+    .g2 { background: linear-gradient(135deg, #de9b33, #c94f4f); }
+    .g3 { background: linear-gradient(135deg, #2eb872, #0e9c82); }
+    .g4 { background: linear-gradient(135deg, #c2527d, #7d5fc2); }
+    .g5 { background: linear-gradient(135deg, #0e9c82, #4f7fd9); }
+    .g6 { background: linear-gradient(135deg, #b0653f, #de9b33); }
+
+    /* Shields vignette */
+    .msg {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        padding: 6px 8px;
+        font-size: 13px;
+    }
+    .msg .who { font-weight: 700; flex: 0 0 auto; }
+    .msg .txt { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .shield { flex: 0 0 auto; font-size: 12px; }
+    .shield.grey { color: var(--muted); opacity: 0.65; position: relative; }
+    .shield.grey::after {
+        content: "";
+        position: absolute;
+        left: -2px; right: -2px; top: 50%;
+        height: 1.5px;
+        background: var(--danger);
+        transform: rotate(-18deg);
+    }
+    .shield.red { color: var(--danger); }
+    .msg-note {
+        font-size: 11px;
+        color: var(--muted);
+        padding: 0 8px 6px;
+        font-style: italic;
+    }
+
+    /* Rail vignette bits */
+    .rail-demo { display: flex; gap: 10px; }
+    .rail {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        align-items: center;
+        padding: 8px 6px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+    }
+    .rail .sp {
+        width: 26px; height: 26px;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        font-size: 11px;
+        font-weight: 700;
+        color: #fff;
+    }
+    .rail .toggle {
+        width: 26px; height: 18px;
+        border-radius: 6px;
+        border: 1px dashed var(--muted);
+        color: var(--muted);
+        display: grid;
+        place-items: center;
+        font-size: 9px;
+    }
+
+    /* Under the hood table */
+    .facts {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14.5px;
+        margin-top: 10px;
+    }
+    .facts td {
+        padding: 10px 14px 10px 0;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+    }
+    .facts td:first-child {
+        font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+        font-size: 12.5px;
+        color: var(--accent-ink);
+        white-space: nowrap;
+        padding-right: 22px;
+        padding-top: 12px;
+    }
+    .facts-scroll { overflow-x: auto; }
+
+    footer {
+        margin-top: 80px;
+        padding-top: 24px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 24px;
+        justify-content: space-between;
+        font-size: 13px;
+        color: var(--muted);
+    }
+
+    html, body { margin: 0; }
+    @media (prefers-reduced-motion: no-preference) {
+        header .eyebrow, header h1, header .subtitle, header .spec-strip {
+            animation: rise 0.55s ease-out backwards;
+        }
+        header h1 { animation-delay: 0.05s; }
+        header .subtitle { animation-delay: 0.12s; }
+        header .spec-strip { animation-delay: 0.2s; }
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: none; }
+        }
+    }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <header>
+        <p class="eyebrow">davidmcarati / element-capacitor · fork of element-hq/element-web</p>
+        <h1>Capacitor<span class="cap-symbol"> ⊣⊢</span></h1>
+        <p class="subtitle">An Element fork tuned for daily use — the same end-to-end-encrypted Matrix
+            client underneath, with the everyday experience reworked to <strong>feel like the chat apps
+            people already know</strong>.</p>
+
+        <div class="spec-strip mono">
+            <div class="spec"><b>v1.12.23</b><span>Element base</span></div>
+            <div class="spec"><b>+1,712</b><span>lines added</span></div>
+            <div class="spec"><b>50</b><span>files touched</span></div>
+            <div class="spec"><b>7</b><span>features shipped</span></div>
+        </div>
+    </header>
+
+    <div class="divider" aria-hidden="true">
+        <svg width="72" height="28" viewBox="0 0 72 28" fill="none">
+            <line class="lead" x1="0" y1="14" x2="28" y2="14" stroke-width="1.5"/>
+            <line class="plates" x1="30" y1="4" x2="30" y2="24" stroke-width="2.5"/>
+            <line class="plates" x1="42" y1="4" x2="42" y2="24" stroke-width="2.5"/>
+            <line class="lead" x1="44" y1="14" x2="72" y2="14" stroke-width="1.5"/>
+        </svg>
+    </div>
+
+    <section>
+        <p class="section-label"><em>00</em> · why fork element at all</p>
+        <h2>Element is solid. It just doesn't feel familiar.</h2>
+        <p class="lede">Matrix gets the hard parts right — federation, encryption, self-hosting. But for
+            people arriving from Slack or Discord, Element's navigation asks them to learn a new mental
+            model before they can send a message. Capacitor keeps the engine and rebuilds the cabin.</p>
+        <ul class="why-list">
+            <li><b>Familiar UX for Slack / Discord users.</b> Navigation and the room list are reorganized
+                around the mental model people already have — channels and people — instead of
+                Matrix-specific concepts.</li>
+            <li><b>First-class GIF support.</b> GIF search and sending, right where you'd expect it in the
+                composer, because that's table stakes for a daily chat app in 2026.</li>
+            <li><b>Everyday polish.</b> The papercuts — noisy encryption icons, misplaced presence dots,
+                wasted vertical space — that individually seem small but add up to a worse daily feel.</li>
+        </ul>
+    </section>
+
+    <div class="divider" aria-hidden="true">
+        <svg width="72" height="28" viewBox="0 0 72 28" fill="none">
+            <line class="lead" x1="0" y1="14" x2="28" y2="14" stroke-width="1.5"/>
+            <line class="plates" x1="30" y1="4" x2="30" y2="24" stroke-width="2.5"/>
+            <line class="plates" x1="42" y1="4" x2="42" y2="24" stroke-width="2.5"/>
+            <line class="lead" x1="44" y1="14" x2="72" y2="14" stroke-width="1.5"/>
+        </svg>
+    </div>
+
+    <section>
+        <p class="section-label"><em>01</em> · navigation &amp; room list</p>
+        <h2>A room list that reads like Slack</h2>
+
+        <div class="feature">
+            <div>
+                <h3>Channels and Contacts, not "All Chats"</h3>
+                <p>Upstream Element pools everything into one list. Capacitor splits it into two synthetic
+                    sections — <strong>Channels</strong> for group rooms and <strong>Contacts</strong> for
+                    direct messages — so the sidebar maps onto how people actually think about their
+                    conversations. Implemented in the room list store (<code>RoomListStoreV3</code>) with
+                    new section definitions, so filtering, sorting, and virtualization all keep working.</p>
+
+                <h3>Compact, denser rows</h3>
+                <p>Avatars drop to 24&nbsp;px and row heights tighten, fitting noticeably more
+                    conversations on screen — the difference between scanning and scrolling.
+                    <code>RoomAvatarView</code> was made size-configurable rather than hard-coded, so the
+                    compact size is a parameter, not a hack.</p>
+
+                <h3>Drag-and-drop ordering that follows you</h3>
+                <p>Rooms can be manually reordered within Channels and Contacts. The custom order is
+                    stored in Matrix <strong>account data</strong>, so it syncs across every device you
+                    sign in on — arrange your sidebar once, keep it everywhere.</p>
+
+                <h3>A quieter space rail</h3>
+                <p>The meta-space shortcuts (Home, "Other rooms") collapse behind a single toggle by
+                    default, with the state persisted locally. The left edge of the app stops competing
+                    for attention it doesn't need.</p>
+            </div>
+            <div>
+                <div class="vignette" role="img" aria-label="Mockup of the redesigned room list with Channels and Contacts sections">
+                    <div class="rail-demo">
+                        <div class="rail" aria-hidden="true">
+                            <div class="sp" style="background:#0e9c82">C</div>
+                            <div class="toggle">▸</div>
+                        </div>
+                        <div class="ui" style="flex:1" aria-hidden="true">
+                            <div class="ui-section-label">Channels <span class="grip">⠿</span></div>
+                            <div class="row active"><span class="av c1">D</span><span class="name"># design</span><span class="badge">3</span></div>
+                            <div class="row"><span class="av c4">R</span><span class="name dim"># releases</span></div>
+                            <div class="row"><span class="av c2">G</span><span class="name dim"># general</span></div>
+                            <div class="ui-section-label" style="margin-top:6px">Contacts</div>
+                            <div class="row"><span class="av c3 round">M<span class="presence"></span></span><span class="name">Maria K</span><span class="badge">1</span></div>
+                            <div class="row"><span class="av c5 round">T</span><span class="name dim">Tigran A</span></div>
+                        </div>
+                    </div>
+                    <p class="vignette-caption">channels / contacts · 24px avatars · drag to reorder</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider" aria-hidden="true">
+        <svg width="72" height="28" viewBox="0 0 72 28" fill="none">
+            <line class="lead" x1="0" y1="14" x2="28" y2="14" stroke-width="1.5"/>
+            <line class="plates" x1="30" y1="4" x2="30" y2="24" stroke-width="2.5"/>
+            <line class="plates" x1="42" y1="4" x2="42" y2="24" stroke-width="2.5"/>
+            <line class="lead" x1="44" y1="14" x2="72" y2="14" stroke-width="1.5"/>
+        </svg>
+    </div>
+
+    <section>
+        <p class="section-label"><em>02</em> · threads where you can see them</p>
+        <h2>Active threads, surfaced in the room list</h2>
+
+        <div class="feature flip">
+            <div>
+                <div class="vignette" role="img" aria-label="Mockup of a room with its active threads listed beneath it">
+                    <div class="ui" aria-hidden="true">
+                        <div class="row active"><span class="chev">▾</span><span class="av c1">P</span><span class="name"># product</span><span class="badge">5</span></div>
+                        <div class="thread-list">
+                            <div class="thread-row unread"><span>Q3 roadmap review</span><span class="dot"></span></div>
+                            <div class="thread-row unread"><span>Deploy checklist</span><span class="dot"></span></div>
+                            <div class="thread-row"><span>Onboarding copy</span></div>
+                            <div class="thread-more">Show 3 more threads</div>
+                        </div>
+                        <div class="row"><span class="chev">▸</span><span class="av c4">R</span><span class="name dim"># releases</span></div>
+                    </div>
+                    <p class="vignette-caption">threads active in the last 3 days · click to open</p>
+                </div>
+            </div>
+            <div>
+                <p>In upstream Element, threads live behind a panel you have to remember to open — easy to
+                    miss, easy to lose. Capacitor lifts a room's <strong>recently active threads directly
+                    into the room list</strong>, as clickable rows nested under the room itself.</p>
+                <ul class="plain">
+                    <li><strong>Recency-filtered.</strong> Only threads active within the last
+                        <em>N</em> days appear — configurable in Preferences
+                        (<code>activeThreadDays</code>, default 3), so the list shows what's alive, not an
+                        archive.</li>
+                    <li><strong>Chevrons for cascading threads.</strong> Rooms with threads get an
+                        expand/collapse chevron, keeping the cascade tidy when you don't need it.</li>
+                    <li><strong>Unread state at a glance.</strong> Each thread row carries its own
+                        notification decoration, and unread threads render emphasized.</li>
+                    <li><strong>Bounded by design.</strong> Five threads show by default with an
+                        accessible "Show <em>n</em> more / Show fewer" toggle — a busy room can't flood the
+                        sidebar.</li>
+                    <li><strong>One click to the conversation.</strong> Each row opens its thread
+                        directly — no room-first, panel-second dance.</li>
+                </ul>
+                <p>The feature ships with 170+ lines of new viewmodel tests and Storybook stories for
+                    every state.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider" aria-hidden="true">
+        <svg width="72" height="28" viewBox="0 0 72 28" fill="none">
+            <line class="lead" x1="0" y1="14" x2="28" y2="14" stroke-width="1.5"/>
+            <line class="plates" x1="30" y1="4" x2="30" y2="24" stroke-width="2.5"/>
+            <line class="plates" x1="42" y1="4" x2="42" y2="24" stroke-width="2.5"/>
+            <line class="lead" x1="44" y1="14" x2="72" y2="14" stroke-width="1.5"/>
+        </svg>
+    </div>
+
+    <section>
+        <p class="section-label"><em>03</em> · gif support</p>
+        <h2>A GIF picker, exactly where you expect it</h2>
+
+        <div class="feature">
+            <div>
+                <p>A <strong>GIF button sits next to the emoji button</strong> in the message composer.
+                    It opens a searchable picker — trending GIFs by default, live search as you type —
+                    and a click sends the GIF as an animated image into the room.</p>
+                <ul class="plain">
+                    <li><strong>Giphy-powered, provider-configurable.</strong> The integration is built
+                        behind a provider abstraction with a content-rating setting.</li>
+                    <li><strong>Zero secrets in git.</strong> The API key is read at runtime from
+                        <code>config.json</code> and is never committed. Without a key, the button still
+                        appears and the picker explains how to configure one.</li>
+                </ul>
+                <pre><code>{
+    "gif_provider": {
+        "provider": "giphy",
+        "api_key": "YOUR_GIPHY_API_KEY",
+        "rating": "pg-13"
+    }
+}</code></pre>
+            </div>
+            <div>
+                <div class="vignette" role="img" aria-label="Mockup of the GIF picker above the message composer">
+                    <div class="ui" aria-hidden="true">
+                        <div class="gif-search">🔍 <span>Search Giphy… (showing trending)</span></div>
+                        <div class="gif-grid">
+                            <div class="g g1"></div><div class="g g2"></div><div class="g g3"></div>
+                            <div class="g g4"></div><div class="g g5"></div><div class="g g6"></div>
+                        </div>
+                    </div>
+                    <div class="composer" aria-hidden="true">
+                        <span>Message #design…</span>
+                        <span class="icons"><span class="icon-pill on">GIF</span><span>😊</span><span>📎</span></span>
+                    </div>
+                    <p class="vignette-caption">trending by default · live search · one click to send</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider" aria-hidden="true">
+        <svg width="72" height="28" viewBox="0 0 72 28" fill="none">
+            <line class="lead" x1="0" y1="14" x2="28" y2="14" stroke-width="1.5"/>
+            <line class="plates" x1="30" y1="4" x2="30" y2="24" stroke-width="2.5"/>
+            <line class="plates" x1="42" y1="4" x2="42" y2="24" stroke-width="2.5"/>
+            <line class="lead" x1="44" y1="14" x2="72" y2="14" stroke-width="1.5"/>
+        </svg>
+    </div>
+
+    <section>
+        <p class="section-label"><em>04</em> · everyday polish</p>
+        <h2>Fewer papercuts, quieter chrome</h2>
+
+        <div class="feature">
+            <div>
+                <h3>Quieter encryption shields</h3>
+                <p>Element decorates messages whose authenticity merely "can't be guaranteed" with a grey
+                    informational shield — noise that trains users to ignore <em>all</em> shields.
+                    Capacitor hides the purely-informational grey icon while keeping every genuine
+                    <strong style="color:var(--danger)">red security warning</strong> intact. Signal stays,
+                    noise goes.</p>
+                <h3>Presence dot, fixed</h3>
+                <p>On the new compact rows the online/offline indicator drifted off the avatar; it now
+                    sits correctly on the avatar corner.</p>
+                <h3>Rebranded end to end</h3>
+                <p>App name, window icons, manifest, and in-app logos (including a redrawn SVG logo)
+                    are updated from Element to Capacitor — so the fork reads as its own product, not a
+                    mislabeled Element install.</p>
+            </div>
+            <div>
+                <div class="vignette" role="img" aria-label="Mockup showing the grey informational shield removed while red warnings remain">
+                    <div class="ui" aria-hidden="true">
+                        <div class="msg"><span class="shield grey">🛡</span><span class="who">Maria</span><span class="txt">merged the release branch ✅</span></div>
+                        <div class="msg-note">grey "can't guarantee authenticity" shield — hidden</div>
+                        <div class="msg"><span class="shield red">🛡</span><span class="who">Unknown</span><span class="txt">sent from an unverified device</span></div>
+                        <div class="msg-note">red security warning — always kept</div>
+                    </div>
+                    <p class="vignette-caption">informational noise removed · real warnings preserved</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider" aria-hidden="true">
+        <svg width="72" height="28" viewBox="0 0 72 28" fill="none">
+            <line class="lead" x1="0" y1="14" x2="28" y2="14" stroke-width="1.5"/>
+            <line class="plates" x1="30" y1="4" x2="30" y2="24" stroke-width="2.5"/>
+            <line class="plates" x1="42" y1="4" x2="42" y2="24" stroke-width="2.5"/>
+            <line class="lead" x1="44" y1="14" x2="72" y2="14" stroke-width="1.5"/>
+        </svg>
+    </div>
+
+    <section>
+        <p class="section-label"><em>05</em> · under the hood</p>
+        <h2>Built the way upstream builds</h2>
+        <p class="lede">Every feature follows Element's own architecture, so the fork stays mergeable
+            and the code reads like it belongs.</p>
+        <div class="facts-scroll">
+        <table class="facts">
+            <tbody>
+                <tr>
+                    <td>MVVM</td>
+                    <td>New UI follows Element's viewmodel pattern — thread visibility, section headers,
+                        and item state live in <code>RoomListItemViewModel</code> and friends, with views
+                        kept thin in the <code>shared-components</code> package.</td>
+                </tr>
+                <tr>
+                    <td>tested</td>
+                    <td>New behavior ships with unit tests (170+ lines for the threads viewmodel alone)
+                        and Storybook stories covering default, unread, expanded, and overflow states.</td>
+                </tr>
+                <tr>
+                    <td>i18n</td>
+                    <td>Every new string goes through the translation pipeline, including proper
+                        pluralization ("Show 1 more thread" / "Show 5 more threads").</td>
+                </tr>
+                <tr>
+                    <td>a11y</td>
+                    <td>Thread rows are real buttons with descriptive <code>aria-label</code>s; unread
+                        state is summarized for screen readers rather than conveyed by color alone.</td>
+                </tr>
+                <tr>
+                    <td>synced</td>
+                    <td>User preferences live at the right layer: room order in Matrix account data
+                        (cross-device), rail collapse state locally (per device), thread recency in
+                        account settings.</td>
+                </tr>
+                <tr>
+                    <td>configurable</td>
+                    <td>The GIF provider is runtime configuration, not a compile-time constant — deploys
+                        choose their own key, provider, and content rating.</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </section>
+
+    <footer>
+        <span>Capacitor · a fork of Element Web v1.12.23</span>
+        <span class="mono">github.com/davidmcarati/element-capacitor</span>
+    </footer>
+</div>
+</body>
+</html>

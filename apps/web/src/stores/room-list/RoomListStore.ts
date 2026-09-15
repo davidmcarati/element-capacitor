@@ -629,4 +629,7 @@ export default class RoomListStore {
     }
 }
 
-window.mxRoomListStore = RoomListStore.instance;
+Object.defineProperty(window, "mxRoomListStore", {
+    get: () => RoomListStore.instance,
+    configurable: true,
+});

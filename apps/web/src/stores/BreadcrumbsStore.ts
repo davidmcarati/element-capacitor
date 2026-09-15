@@ -29,11 +29,7 @@ interface IState {
 }
 
 export class BreadcrumbsStore extends AsyncStoreWithClient<IState> {
-    private static readonly internalInstance = (() => {
-        const instance = new BreadcrumbsStore();
-        instance.start();
-        return instance;
-    })();
+    private static internalInstance?: BreadcrumbsStore;
 
     private waitingRooms: { roomId: string; addedTs: number }[] = [];
 
@@ -45,6 +41,11 @@ export class BreadcrumbsStore extends AsyncStoreWithClient<IState> {
     }
 
     public static get instance(): BreadcrumbsStore {
+        if (!BreadcrumbsStore.internalInstance) {
+            // Assigned before start() so re-entrant access during startup cannot recurse.
+            BreadcrumbsStore.internalInstance = new BreadcrumbsStore();
+            BreadcrumbsStore.internalInstance.start();
+        }
         return BreadcrumbsStore.internalInstance;
     }
 

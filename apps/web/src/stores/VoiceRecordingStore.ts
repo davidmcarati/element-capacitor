@@ -95,4 +95,7 @@ export class VoiceRecordingStore extends AsyncStoreWithClient<IState> {
     }
 }
 
-window.mxVoiceRecordingStore = VoiceRecordingStore.instance;
+Object.defineProperty(window, "mxVoiceRecordingStore", {
+    get: () => VoiceRecordingStore.instance,
+    configurable: true,
+});

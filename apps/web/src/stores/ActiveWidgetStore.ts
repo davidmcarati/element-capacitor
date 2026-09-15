@@ -123,4 +123,7 @@ export default class ActiveWidgetStore extends EventEmitter {
     }
 }
 
-window.mxActiveWidgetStore = ActiveWidgetStore.instance;
+Object.defineProperty(window, "mxActiveWidgetStore", {
+    get: () => ActiveWidgetStore.instance,
+    configurable: true,
+});
