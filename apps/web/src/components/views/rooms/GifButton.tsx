@@ -12,8 +12,7 @@ import { logger } from "matrix-js-sdk/src/logger";
 
 import { _t } from "../../../languageHandler";
 import ContextMenu, { aboveLeftOf, type MenuProps, useContextMenu } from "../../structures/ContextMenu";
-import { CollapsibleButton } from "./CollapsibleButton";
-import { OverflowMenuContext } from "./MessageComposerButtons";
+import { CollapsibleButton, OverflowMenuContext } from "./CollapsibleButton";
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import ContentMessages from "../../../ContentMessages";
 import Modal from "../../../Modal";

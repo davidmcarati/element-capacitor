@@ -80,14 +80,6 @@ const filterKeyToIdMap: Map<FilterEnum, FilterId> = new Map([
     [FilterEnum.LowPriorityFilter, "low_priority"],
 ]);
 
-const TAG_TO_TITLE_MAP: Record<string, string> = {
-    [DefaultTagID.Favourite]: _t("room_list|section|favourites"),
-    [CHATS_TAG]: _t("room_list|section|chats"),
-    [CHANNELS_TAG]: _t("room_list|section|channels"),
-    [CONTACTS_TAG]: _t("room_list|section|contacts"),
-    [DefaultTagID.LowPriority]: _t("room_list|section|low_priority"),
-};
-
 /**
  * Filters that are redundant when sections are enabled: Invites, Favourites and Low Priority rooms
  * already have their own sections, so these filters are only shown as chips when sectioning
@@ -120,6 +112,10 @@ function getSectionTitle(tag: string): string {
             return _t("room_list|section|low_priority");
         case DefaultTagID.DM:
             return _t("common|people");
+        case CHANNELS_TAG:
+            return _t("room_list|section|channels");
+        case CONTACTS_TAG:
+            return _t("room_list|section|contacts");
         case CHATS_TAG:
             // Without a People section, this section holds the direct messages too, so it keeps its
             // broader name.
