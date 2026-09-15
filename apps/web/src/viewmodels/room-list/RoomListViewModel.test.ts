@@ -1193,7 +1193,7 @@ describe("RoomListViewModel", () => {
                 { tag: DefaultTagID.Favourite, showPeopleSection: false, title: "Favourites" },
                 // Without a People section, the Chats section holds the direct messages too
                 { tag: CHATS_TAG, showPeopleSection: false, title: "Chats" },
-                { tag: CHATS_TAG, showPeopleSection: true, title: "Rooms" },
+                { tag: CHATS_TAG, showPeopleSection: true, title: "Channels" },
                 { tag: DefaultTagID.DM, showPeopleSection: true, title: "People" },
             ])(
                 'should title the $tag section header "$title" when showPeopleSection is $showPeopleSection',
@@ -1241,7 +1241,7 @@ describe("RoomListViewModel", () => {
                 showPeopleSection = true;
                 watchCallback();
 
-                expect(viewModel.getSectionHeaderViewModel(CHATS_TAG).getSnapshot().title).toBe("Rooms");
+                expect(viewModel.getSectionHeaderViewModel(CHATS_TAG).getSnapshot().title).toBe("Channels");
             });
 
             it("should reuse section header view models", () => {

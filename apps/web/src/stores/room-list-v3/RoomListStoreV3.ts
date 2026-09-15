@@ -39,9 +39,7 @@ import { getTagsForRoom } from "../../utils/room/getTagsForRoom";
 import { SectionFilter } from "./skip-list/filters/SectionFilter";
 import { filterBoolean } from "../../utils/arrays";
 import {
-    CHANNELS_TAG,
     CHATS_TAG,
-    CONTACTS_TAG,
     createSection,
     deleteSection,
     editSection,
@@ -50,7 +48,6 @@ import {
 } from "./section";
 import { DefaultTagID, type TagID } from "./skip-list/tag";
 import { SDKContextClass } from "../../contexts/SDKContextClass.ts";
-import DMRoomMap from "../../utils/DMRoomMap";
 import {
     applyManualOrder,
     type ManualOrderMap,
@@ -554,23 +551,9 @@ export class RoomListStoreV3Class extends AsyncStoreWithClient<EmptyObject> {
                 const filters = filterBoolean([tag, ...(filterKeys ?? [])]);
                 const rooms = Array.from(this.roomSkipList?.getRoomsInActiveSpace(filters) || []);
 
-                // Split the synthetic "Chats" section into two consecutive sections:
-                // "Channels" (non-DM rooms) followed by "Contacts" (DM rooms). The room
-                // order within each is preserved from the sorted skip list.
-                if (tag === CHATS_TAG) {
-                    const channels: Room[] = [];
-                    const contacts: Room[] = [];
-                    for (const room of rooms) {
-                        if (DMRoomMap.shared().getUserIdForRoomId(room.roomId)) contacts.push(room);
-                        else channels.push(room);
-                    }
-                    return [
-                        { tag: CHANNELS_TAG, rooms: applyManualOrder(channels, this.manualOrder[CHANNELS_TAG]) },
-                        { tag: CONTACTS_TAG, rooms: applyManualOrder(contacts, this.manualOrder[CONTACTS_TAG]) },
-                    ];
-                }
-
-                return [{ tag, rooms }];
+                // Manual ordering is a stable overlay on top of the global sort; sections with no
+                // stored order fall straight through.
+                return [{ tag, rooms: applyManualOrder(rooms, this.manualOrder[tag]) }];
             })
             .filter((section) => !filterKeys || section.rooms.length > 0);
     }

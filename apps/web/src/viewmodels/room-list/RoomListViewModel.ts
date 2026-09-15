@@ -43,8 +43,6 @@ import {
     isCustomSectionTag,
     isSectionExpanded,
     CHATS_TAG,
-    CHANNELS_TAG,
-    CONTACTS_TAG,
 } from "../../stores/room-list-v3/section";
 import { tagRoom } from "../../utils/room/tagRoom";
 import { getSectionTagForRoom } from "../../utils/room/getSectionTagForRoom";
@@ -112,15 +110,11 @@ function getSectionTitle(tag: string): string {
             return _t("room_list|section|low_priority");
         case DefaultTagID.DM:
             return _t("common|people");
-        case CHANNELS_TAG:
-            return _t("room_list|section|channels");
-        case CONTACTS_TAG:
-            return _t("room_list|section|contacts");
         case CHATS_TAG:
-            // Without a People section, this section holds the direct messages too, so it keeps its
-            // broader name.
+            // With a People section the direct messages live there, so what is left is channels.
+            // Without it this section holds the direct messages too, so it keeps its broader name.
             return SettingsStore.getValue("RoomList.showPeopleSection")
-                ? _t("common|rooms")
+                ? _t("room_list|section|channels")
                 : _t("room_list|section|chats");
         default:
             return (isCustomSectionTag(tag) && getCustomSectionData()[tag]?.name) || tag;
@@ -1077,8 +1071,8 @@ export class RoomListViewModel
         const current = RoomListStoreV3.instance.getSortedRoomsInActiveSpace(filterKeys);
         const section = current.sections.find((s) => s.rooms.some((r) => r.roomId === sourceRoomId));
 
-        // Manual ordering is only supported for the Channels/Contacts sections.
-        if (!section || (section.tag !== CHANNELS_TAG && section.tag !== CONTACTS_TAG)) return;
+        // Manual ordering is supported for the rooms and people sections.
+        if (!section || (section.tag !== CHATS_TAG && section.tag !== DefaultTagID.DM)) return;
         // The target room must live in the same section.
         if (!section.rooms.some((r) => r.roomId === targetRoomId)) return;
 
