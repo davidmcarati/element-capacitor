@@ -9,7 +9,6 @@
             "one": "۱ اشاره خوانده نشده.",
             "other": "%(count)s پیام‌های خوانده نشده از جمله اشاره‌ها."
         },
-        "room_name": "اتاق %(name)s",
         "unread_messages": "پیام های خوانده نشده."
     },
     "a11y_jump_first_unread_room": "به اولین اتاق خوانده نشده بروید.",
@@ -42,7 +41,6 @@
         "enable": "فعال کن",
         "enter_fullscreen": "نمایش تمام صفحه",
         "exit_fullscreeen": "خروج از نمایش تمام صفحه",
-        "explore_public_rooms": "کاوش در اتاق‌های عمومی",
         "explore_rooms": "جستجو در اتاق ها",
         "export": "استخراج (Export)",
         "go": "برو",
@@ -53,7 +51,6 @@
         "ignore": "نادیده‌گرفتن",
         "import": "واردکردن (Import)",
         "invite": "دعوت",
-        "invites_list": "دعوت‌ها",
         "join": "پیوستن",
         "learn_more": "بیشتر بدانید",
         "leave": "خروج",
@@ -90,7 +87,6 @@
         "sign_out": "خروج از حساب کاربری",
         "skip": "بیخیال",
         "start": "شروع",
-        "start_chat": "شروع چت",
         "stop": "توقف",
         "submit": "ارسال",
         "subscribe": "اضافه‌شدن",
@@ -333,14 +329,12 @@
         "encrypted": "رمزشده",
         "error": "خطا",
         "faq": "سوالات پرتکرار",
-        "favourites": "موردعلاقه‌ها",
         "feedback": "بازخورد",
         "filter_results": "پالایش نتایج",
         "general": "عمومی",
         "go_to_settings": "برو به تنظیمات",
         "guest": "مهمان",
         "help": "راهنما",
-        "historical": "تاریخی",
         "home": "خانه",
         "homeserver": "سرور",
         "identity_server": "کارساز هویت",
@@ -348,7 +342,6 @@
         "labs": "قابلیت‌های بتا",
         "legal": "قانونی",
         "light": "روشن",
-        "low_priority": "اولویت کم",
         "matrix": "ماتریکس",
         "microphone": "میکروفون",
         "mute": "سکوت",
@@ -398,7 +391,6 @@
         "success": "موفقیت",
         "suggestions": "پیشنهادات",
         "support": "پشتیبانی",
-        "system_alerts": "هشدارهای سیستم",
         "theme": "پوسته",
         "threads": "موضوعات",
         "timeline": "سیر زمان گفتگو‌ها",
@@ -409,7 +401,6 @@
         "user": "کاربر",
         "user_avatar": "تصویر پروفایل",
         "username": "نام کاربری",
-        "video": "ویدئو",
         "view_message": "مشاهده پیام",
         "warning": "هشدار"
     },
@@ -526,22 +517,6 @@
     },
     "dialog_close_label": "بستن گفتگو",
     "download_completed": "بارگیری کامل شد",
-    "emoji": {
-        "categories": "دسته بندی ها",
-        "category_activities": "فعالیت ها",
-        "category_animals_nature": "حیوانات و طبیعت",
-        "category_flags": "پرچم ها",
-        "category_food_drink": "غذا و نوشیدنی",
-        "category_frequently_used": "متداول",
-        "category_objects": "اشیاء",
-        "category_smileys_people": "لبخند و افراد",
-        "category_symbols": "نمادها",
-        "category_travel_places": "سفر و اماکن",
-        "quick_reactions": "واکنش سریع"
-    },
-    "emoji_picker": {
-        "cancel_search_label": "لغو جستجو"
-    },
     "empty_room": "اتاق خالی",
     "empty_room_was_name": "اتاق خالی (نام قبلی: %(oldName)s)",
     "encryption": {
@@ -806,7 +781,6 @@
         "name_mxid_share_room": "با استفاده از نام یا نام کاربری (مانند <userId/>) از افراد دعوت کرده و یا <a>این اتاق را به اشتراک بگذارید</a>.",
         "name_mxid_share_space": "با استفاده از نام یا نام کاربری (مانند <userId/>) از افراد دعوت کرده و یا <a>این فضای کاری را به اشتراک بگذارید</a>.",
         "recents_section": "گفتگوهای اخیر",
-        "room_failed_partial": "ما برای باقی ارسال کردیم، ولی افراد زیر نمی توانند به <RoomName/> دعوت شوند",
         "room_failed_partial_title": "بعضی از دعوت ها ارسال نشد",
         "room_failed_title": "افزودن کاربران به %(roomName)s با شکست روبرو شد",
         "start_conversation_name_email_mxid_prompt": "با استفاده از نام، آدرس ایمیل و یا نام کاربری (مانند <userId/>)، یک گفتگوی جدید را شروع کنید.",
@@ -893,7 +867,6 @@
         "bridge_state_creator": "این پل ارتباطی توسط <user /> ارائه شده‌است.",
         "bridge_state_manager": "این پل ارتباطی توسط <user /> مدیریت می‌شود.",
         "bridge_state_workspace": "فضای کار:<networkLink/>",
-        "custom_themes": "پشتیبانی از افزودن پوسته‌های ظاهری دلخواه",
         "group_developer": "توسعه دهنده",
         "group_encryption": "رمزنگاری",
         "group_experimental": "تجربی",
@@ -902,7 +875,6 @@
         "group_profile": "پروفایل",
         "group_rooms": "اتاق‌ها",
         "group_spaces": "محیط‌ها",
-        "group_themes": "قالب ها",
         "group_voip": "صدا و تصویر",
         "group_widgets": "ابزارک ها",
         "join_beta": "اضافه‌شدن به نسخه‌ی بتا",
@@ -950,9 +922,6 @@
         "leave_space_question": "آیا از ترک فضای '%(spaceName)s' اطمینان دارید؟",
         "room_rejoin_warning": "این اتاق عمومی نیست. پیوستن مجدد بدون دعوتنامه امکان‌پذیر نخواهد بود.",
         "space_rejoin_warning": "این فضا عمومی نیست. امکان پیوستن مجدد بدون دعوتنامه امکان‌پذیر نخواهد بود."
-    },
-    "left_panel": {
-        "open_dial_pad": "باز کردن صفحه شماره‌گیری"
     },
     "lightbox": {
         "rotate_left": "چرخش به چپ",
@@ -1176,24 +1145,10 @@
         }
     },
     "room_list": {
-        "add_room_label": "افزودن اتاق",
-        "breadcrumbs_empty": "اخیراً از اتاقی بازدید نشده است",
-        "breadcrumbs_label": "اتاق‌هایی که به تازگی بازدید کرده‌اید",
         "failed_add_tag": "در افزودن تگ %(tagName)s موفقیت‌آمیز نبود",
         "failed_remove_tag": "خطا در حذف کلیدواژه‌ی %(tagName)s از گپ",
         "notification_options": "تنظیمات اعلان",
-        "show_less": "نمایش کمتر",
-        "show_n_more": {
-            "other": "نمایش %(count)s مورد بیشتر",
-            "one": "نمایش %(count)s مورد بیشتر"
-        },
-        "show_previews": "مشاهده پیش‌نمایش پیام‌ها",
-        "sort_by": "مرتب سازی بر اساس",
-        "sort_by_activity": "فعالیت",
-        "sort_by_alphabet": "حروف الفبا",
-        "sort_unread_first": "ابتدا اتاق های با پیام خوانده نشده را نمایش بده",
-        "sublist_options": "لیست گزینه‌ها",
-        "suggested_rooms_heading": "اتاق‌های پیشنهادی"
+        "show_less": "نمایش کمتر"
     },
     "room_settings": {
         "advanced": {
@@ -1371,8 +1326,6 @@
             "custom_font_description": "نام فونتی که بر روی سیستم‌تان نصب است را وارد کرده و %(brand)s سعی می‌کند از آن استفاده کند.",
             "custom_font_name": "نام فونت سیستمی",
             "custom_font_size": "از اندازه‌ی دلخواه استفاده کنید",
-            "custom_theme_error_downloading": "بارگیری اطلاعات پوسته با خطا همراه بود.",
-            "custom_theme_invalid": "ساختار پوسته صحیح نیست.",
             "font_size": "اندازه فونت",
             "image_size_default": "پیشفرض",
             "match_system_theme": "با پوسته‌ی سیستم تطبیق پیدا کن"
@@ -1688,10 +1641,6 @@
         "suggested_tooltip": "این اتاق به عنوان یک گزینه‌ی خوب برای عضویت پیشنهاد می شود",
         "unmark_suggested": "علامت‌گذاری به عنوان پیشنهاد‌نشده",
         "user_lacks_permission": "شما دسترسی ندارید"
-    },
-    "spaces": {
-        "error_no_permission_add_room": "شما اجازه افزودن اتاق به این فضای کاری را ندارید",
-        "error_no_permission_create_room": "شما اجازه ایجاد اتاق جدید در این فضای کاری را ندارید"
     },
     "spotlight": {
         "public_rooms": {

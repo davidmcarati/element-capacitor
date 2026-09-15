@@ -1,3 +1,10 @@
+/*
+Copyright 2026 Element Creations Ltd.
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE in the repository root for full details.
+*/
+
 module.exports = {
     extends: ["stylelint-config-standard"],
     customSyntax: "postcss-scss",
@@ -77,5 +84,6 @@ module.exports = {
         ],
         "nesting-selector-no-missing-scoping-root": null,
         "no-invalid-position-declaration": null,
+        "at-rule-prelude-no-invalid": [true, { ignoreAtRules: ["mixin"] }],
     },
 };

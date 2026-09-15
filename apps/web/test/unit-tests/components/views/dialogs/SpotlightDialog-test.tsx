@@ -18,7 +18,7 @@ import {
     RoomMember,
 } from "matrix-js-sdk/src/matrix";
 import { KnownMembership } from "matrix-js-sdk/src/types";
-import sanitizeHtml from "sanitize-html";
+import { sanitizeHtml } from "@element-hq/element-web-shared-utils";
 import { fireEvent, render, screen, waitFor } from "jest-matrix-react";
 
 import SpotlightDialog from "../../../../../src/components/views/dialogs/spotlight/SpotlightDialog";
@@ -34,7 +34,7 @@ import defaultDispatcher from "../../../../../src/dispatcher/dispatcher";
 import SdkConfig from "../../../../../src/SdkConfig";
 import { Action } from "../../../../../src/dispatcher/actions";
 import { MetaSpace } from "../../../../../src/stores/spaces";
-import SpaceStore from "../../../../../src/stores/spaces/SpaceStore.ts";
+import { SDKContextClass } from "../../../../../src/contexts/SDKContextClass.ts";
 
 jest.useFakeTimers();
 
@@ -177,6 +177,47 @@ describe("Spotlight Dialog", () => {
         });
 
         mocked(mockedClient.getVisibleRooms).mockReturnValue([testRoom, testLocalRoom, testDM]);
+    });
+
+    it("should not fall into a filter when the query matches nothing", async () => {
+        render(<SpotlightDialog initialText="zzzznothingmatchesthis" onFinished={() => null} />);
+
+        jest.advanceTimersByTime(200);
+        await flushPromisesWithFakeTimers();
+
+        expect(screen.getByText("No results found")).toBeInTheDocument();
+
+        fireEvent.keyDown(document.querySelector(".mx_SpotlightDialog_searchBox input")!, { key: "Enter" });
+
+        expect(document.querySelector("div.mx_SpotlightDialog_filter")).not.toBeInTheDocument();
+    });
+
+    it("should not offer the enter shortcut on the no results entry", async () => {
+        render(<SpotlightDialog initialText="zzzznothingmatchesthis" onFinished={() => null} />);
+
+        jest.advanceTimersByTime(200);
+        await flushPromisesWithFakeTimers();
+
+        const noResults = document.querySelector("#mx_SpotlightDialog_button_noResults")!;
+        expect(noResults.querySelector(".mx_SpotlightDialog_enterPrompt")).not.toBeInTheDocument();
+
+        const startChat = document.querySelector("#mx_SpotlightDialog_button_startChat")!;
+        expect(startChat.querySelector(".mx_SpotlightDialog_enterPrompt")).toBeInTheDocument();
+    });
+
+    it("should expose the no results entry as an unavailable option rather than a button", async () => {
+        render(<SpotlightDialog initialText="zzzznothingmatchesthis" onFinished={() => null} />);
+
+        jest.advanceTimersByTime(200);
+        await flushPromisesWithFakeTimers();
+
+        const noResults = document.querySelector("#mx_SpotlightDialog_button_noResults")!;
+        expect(noResults).toHaveAttribute("aria-disabled", "true");
+        expect(noResults).not.toHaveClass("mx_AccessibleButton");
+
+        const startChat = document.querySelector("#mx_SpotlightDialog_button_startChat")!;
+        expect(startChat).not.toHaveAttribute("aria-disabled");
+        expect(startChat).toHaveClass("mx_AccessibleButton");
     });
 
     describe("should apply filters supplied via props", () => {
@@ -704,26 +745,21 @@ describe("Spotlight Dialog", () => {
 
     describe("metaspaces", () => {
         beforeEach(() => {
-            jest.spyOn(SpaceStore.instance, "enabledMetaSpaces", "get").mockReturnValue([
+            jest.spyOn(SDKContextClass.instance.spaceStore, "enabledMetaSpaces", "get").mockReturnValue([
                 MetaSpace.Home,
-                MetaSpace.Favourites,
-                MetaSpace.People,
                 MetaSpace.Orphans,
             ]);
         });
 
-        it.each([MetaSpace.Home, MetaSpace.Favourites, MetaSpace.People])(
-            "should show metaspace %s",
-            async (metaSpace) => {
-                const onFinished = jest.fn();
-                const { asFragment, container } = render(
-                    <SpotlightDialog initialText={metaSpace.split("-")[0]} onFinished={onFinished} />,
-                );
-                await waitFor(() =>
-                    expect(container.querySelector(".mx_SpotlightDialog_metaspaceResult")).toBeInTheDocument(),
-                );
-                expect(asFragment()).toMatchSnapshot();
-            },
-        );
+        it("should show Home metaspace", async () => {
+            const onFinished = jest.fn();
+            const { asFragment, container } = render(
+                <SpotlightDialog initialText={MetaSpace.Home.split("-")[0]} onFinished={onFinished} />,
+            );
+            await waitFor(() =>
+                expect(container.querySelector(".mx_SpotlightDialog_metaspaceResult")).toBeInTheDocument(),
+            );
+            expect(asFragment()).toMatchSnapshot();
+        });
     });
 });

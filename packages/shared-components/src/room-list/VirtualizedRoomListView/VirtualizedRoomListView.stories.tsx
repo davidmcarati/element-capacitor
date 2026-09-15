@@ -42,8 +42,8 @@ const RoomListWrapperImpl = ({
     changeRoomSection,
     changeRoomOrder,
     changeSectionOrder,
-    onSectionDragStart,
-    onSectionDragEnd,
+    onSectionOrRoomDragStart,
+    onSectionOrRoomDragEnd,
     ...rest
 }: RoomListStoryProps): JSX.Element => {
     const vm = useMockedViewModel(rest, {
@@ -60,8 +60,8 @@ const RoomListWrapperImpl = ({
         changeRoomSection,
         changeRoomOrder,
         changeSectionOrder,
-        onSectionDragStart,
-        onSectionDragEnd,
+        onSectionOrRoomDragStart,
+        onSectionOrRoomDragEnd,
     });
 
     return (
@@ -107,8 +107,8 @@ const meta = {
         changeRoomSection: fn(),
         changeRoomOrder: fn(),
         changeSectionOrder: fn(),
-        onSectionDragStart: fn(),
-        onSectionDragEnd: fn(),
+        onSectionOrRoomDragStart: fn(),
+        onSectionOrRoomDragEnd: fn(),
     },
     parameters: {
         design: {

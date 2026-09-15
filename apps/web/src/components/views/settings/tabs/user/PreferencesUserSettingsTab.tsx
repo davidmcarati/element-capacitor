@@ -53,7 +53,7 @@ const LanguageSection: React.FC = () => {
         (newLanguage: string) => {
             if (language === newLanguage) return;
 
-            SettingsStore.setValue("language", null, SettingLevel.DEVICE, newLanguage);
+            void SettingsStore.setValue("language", null, SettingLevel.DEVICE, newLanguage);
             setLanguage(newLanguage);
             const platform = PlatformPeg.get();
             if (platform) {
@@ -118,8 +118,6 @@ const SpellCheckSection: React.FC = () => {
 };
 
 export default class PreferencesUserSettingsTab extends React.Component<EmptyObject, IState> {
-    private static ROOM_LIST_SETTINGS: BooleanSettingKey[] = ["breadcrumbs"];
-
     private static SPACES_SETTINGS: BooleanSettingKey[] = ["Spaces.allRoomsInHome"];
 
     private static KEYBINDINGS_SETTINGS: BooleanSettingKey[] = ["ctrlFForSearch"];
@@ -189,7 +187,7 @@ export default class PreferencesUserSettingsTab extends React.Component<EmptyObj
 
     private onTimezoneChange = (tz: string): void => {
         this.setState({ timezone: tz });
-        TimezoneHandler.setUserTimezone(tz);
+        void TimezoneHandler.setUserTimezone(tz);
     };
 
     /**
@@ -208,7 +206,7 @@ export default class PreferencesUserSettingsTab extends React.Component<EmptyObj
 
     private onAutocompleteDelayChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
         this.setState({ autocompleteDelay: e.target.value });
-        SettingsStore.setValue("autocompleteDelay", null, SettingLevel.DEVICE, e.target.valueAsNumber);
+        void SettingsStore.setValue("autocompleteDelay", null, SettingLevel.DEVICE, e.target.valueAsNumber);
     };
 
     private onActiveThreadDaysChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -218,12 +216,17 @@ export default class PreferencesUserSettingsTab extends React.Component<EmptyObj
 
     private onReadMarkerInViewThresholdMs = (e: React.ChangeEvent<HTMLInputElement>): void => {
         this.setState({ readMarkerInViewThresholdMs: e.target.value });
-        SettingsStore.setValue("readMarkerInViewThresholdMs", null, SettingLevel.DEVICE, e.target.valueAsNumber);
+        void SettingsStore.setValue("readMarkerInViewThresholdMs", null, SettingLevel.DEVICE, e.target.valueAsNumber);
     };
 
     private onReadMarkerOutOfViewThresholdMs = (e: React.ChangeEvent<HTMLInputElement>): void => {
         this.setState({ readMarkerOutOfViewThresholdMs: e.target.value });
-        SettingsStore.setValue("readMarkerOutOfViewThresholdMs", null, SettingLevel.DEVICE, e.target.valueAsNumber);
+        void SettingsStore.setValue(
+            "readMarkerOutOfViewThresholdMs",
+            null,
+            SettingLevel.DEVICE,
+            e.target.valueAsNumber,
+        );
     };
 
     private renderGroup(settingIds: BooleanSettingKey[], level = SettingLevel.ACCOUNT): JSX.Element {
@@ -248,7 +251,6 @@ export default class PreferencesUserSettingsTab extends React.Component<EmptyObj
             timezone: TimezoneHandler.shortBrowserTimezone(),
         });
 
-        const newRoomListEnabled = SettingsStore.getValue("feature_new_room_list");
         const brand = SdkConfig.get().brand;
 
         const timezones = this.state.timezones.map((tz) => {
@@ -281,11 +283,13 @@ export default class PreferencesUserSettingsTab extends React.Component<EmptyObj
                     )}
 
                     <SettingsSubsection heading={_t("settings|preferences|room_list_heading")} formWrap>
-                        {!newRoomListEnabled && this.renderGroup(PreferencesUserSettingsTab.ROOM_LIST_SETTINGS)}
-                        {/* The settings is on device level where the other room list settings are on account level  */}
-                        {newRoomListEnabled && (
-                            <SettingsFlag name="RoomList.showMessagePreview" level={SettingLevel.DEVICE} />
-                        )}
+                        <SettingsFlag name="RoomList.showMessagePreview" level={SettingLevel.DEVICE} />
+                        <SettingsFlag name="RoomList.showSections" level={SettingLevel.ACCOUNT} />
+                        <SettingsFlag
+                            name="RoomList.showPeopleSection"
+                            level={SettingLevel.ACCOUNT}
+                            requires={["RoomList.showSections"]}
+                        />
                     </SettingsSubsection>
 
                     <SettingsSubsection heading={_t("common|spaces")} formWrap>

@@ -17,9 +17,10 @@ import {
     FlatVirtualizedList,
     getContainerAccessibleProps,
     type VirtualizedListContext,
+    GroupedVirtualizedList,
+    type GroupedVirtualizedListProps,
 } from "../../core/VirtualizedList";
 import type { RoomListViewSnapshot, RoomListViewModel } from "../RoomListView";
-import { GroupedVirtualizedList, type GroupedVirtualizedListProps } from "../../core/VirtualizedList";
 import { RoomListSectionHeaderView, RoomListStickySectionHeaderView } from "./RoomListSectionHeaderView";
 import { RoomListSectionHeaderDragOverlayView } from "./RoomListSectionHeaderDragOverlayView";
 import { RoomListItemWrapper } from "./RoomListItemWrapper";
@@ -109,6 +110,28 @@ type Context = {
  * improve this case.
  */
 const EXTENDED_VIEWPORT_HEIGHT = 25 * ROOM_LIST_ITEM_HEIGHT;
+
+/**
+ * Work out which entry to put at the top of a grouped list to show the room at `roomIndex`.
+ *
+ * Room indices don't count section headers, but the list is given a flat list of entries in which
+ * every section contributes a header entry before its rooms. A room that comes first in its section
+ * resolves to its header, so it is not shown detached from the section it belongs to; an index past
+ * the last room resolves to the last entry.
+ */
+export function getScrollTargetEntryIndex(sections: { roomIds: string[] }[], roomIndex: number): number {
+    let headerEntry = 0;
+    let roomsBefore = 0;
+    for (const section of sections) {
+        if (roomIndex < roomsBefore + section.roomIds.length) {
+            const indexInSection = roomIndex - roomsBefore;
+            return indexInSection === 0 ? headerEntry : headerEntry + 1 + indexInSection;
+        }
+        headerEntry += section.roomIds.length + 1;
+        roomsBefore += section.roomIds.length;
+    }
+    return Math.max(0, headerEntry - 1);
+}
 
 /**
  * A virtualized list of rooms.
@@ -242,17 +265,63 @@ export function VirtualizedRoomListView({ vm, renderAvatar, onKeyDown }: Virtual
         [sections],
     );
 
+    // In a grouped list, Virtuoso's range counts section headers as entries, so entry indices
+    // don't match room indices. This maps an inclusive entry range to a [start, end) room-index
+    // range. A header entry maps to the section boundary: "from this section's first room" as a
+    // start, "up to the previous section's last room" as an end.
+    const mapEntryRangeToRoomRange = useCallback(
+        (startEntry: number, endEntry: number): [start: number, endExclusive: number] => {
+            let start: number | undefined;
+            let end: number | undefined;
+            let headerEntry = 0; // entry index of the current section's header
+            let roomsBefore = 0; // number of rooms in the sections above the current one
+            for (const section of sections) {
+                // Last entry of this section: the header entry followed by one entry per room
+                const lastEntry = headerEntry + section.roomIds.length;
+
+                // The range starts in this section: on the header (-1 clamped to the first room)
+                // or on one of its rooms
+                if (start === undefined && startEntry <= lastEntry) {
+                    start = roomsBefore + Math.max(0, startEntry - headerEntry - 1);
+                }
+
+                // The range ends in this section: on the header (0 rooms of this section
+                // included) or on one of its rooms (exclusive bound, hence no -1)
+                if (end === undefined && endEntry <= lastEntry) {
+                    end = roomsBefore + Math.max(0, endEntry - headerEntry);
+                }
+
+                // Both bounds found, no need to look at the remaining sections
+                if (start !== undefined && end !== undefined) break;
+
+                // Move to the next section
+                headerEntry = lastEntry + 1;
+                roomsBefore += section.roomIds.length;
+            }
+            // The range can transiently point past the sections when the list shrinks before
+            // Virtuoso reports the new range; fall back to the widest valid window.
+            return [start ?? 0, end ?? roomsBefore];
+        },
+        [sections],
+    );
+
     /**
      * Callback when the visible range changes
      * Notifies the view model which rooms are visible
      */
     const rangeChanged = useCallback(
         (range: { startIndex: number; endIndex: number }) => {
-            vm.updateVisibleRooms(range.startIndex, range.endIndex);
+            // Virtuoso's endIndex is inclusive; updateVisibleRooms takes an exclusive end.
+            if (isFlatList) {
+                vm.updateVisibleRooms(range.startIndex, range.endIndex + 1);
+            } else {
+                const [start, end] = mapEntryRangeToRoomRange(range.startIndex, range.endIndex);
+                vm.updateVisibleRooms(start, end);
+            }
             // The rendered set changed; (un)observe items so the fold stays accurate.
             scheduleSyncObservedItems();
         },
-        [vm, scheduleSyncObservedItems],
+        [vm, scheduleSyncObservedItems, isFlatList, mapEntryRangeToRoomRange],
     );
 
     // Builds the accessibility plugin (live-region announcements) for keyboard/pointer drags,
@@ -439,6 +508,11 @@ export function VirtualizedRoomListView({ vm, renderAvatar, onKeyDown }: Virtual
         ],
     );
 
+    const activeEntryIndex = useMemo(() => {
+        if (activeRoomIndex === undefined) return undefined;
+        return isFlatList ? activeRoomIndex : getScrollTargetEntryIndex(sections, activeRoomIndex);
+    }, [activeRoomIndex, isFlatList, sections]);
+
     /**
      * Determine if we should scroll the active index into view
      * This happens when the space or filters change
@@ -459,13 +533,13 @@ export function VirtualizedRoomListView({ vm, renderAvatar, onKeyDown }: Virtual
             if (shouldScrollIndexIntoView) {
                 return {
                     align: "start",
-                    index: activeRoomIndex || 0,
+                    index: activeEntryIndex ?? 0,
                     behavior: "auto",
                 };
             }
             return false;
         },
-        [activeRoomIndex],
+        [activeEntryIndex],
     );
 
     // Imperatively scroll to a newly created section header.
@@ -508,7 +582,7 @@ export function VirtualizedRoomListView({ vm, renderAvatar, onKeyDown }: Virtual
         scrollIntoViewOnChange,
         // If fixedItemHeight is not set and initialTopMostItemIndex=undefined, virtuoso crashes
         // If we don't set it, it works
-        ...(activeRoomIndex !== undefined ? { initialTopMostItemIndex: activeRoomIndex } : {}),
+        ...(activeEntryIndex !== undefined ? { initialTopMostItemIndex: activeEntryIndex } : {}),
         ["data-testid"]: "room-list",
         ["aria-label"]: _t("room_list|list_title"),
         getItemKey,
@@ -535,17 +609,13 @@ export function VirtualizedRoomListView({ vm, renderAvatar, onKeyDown }: Virtual
     return (
         <DragDropProvider<RoomListDragData>
             onDragStart={(event) => {
-                const { source } = event.operation;
-                // Changing the state of sections (collapsed/expanded) while dragging a section header causes a double readback for the a11y announcement.
-                if (isSectionDragData(source?.data)) {
-                    vm.onSectionDragStart();
-                }
+                // Changing the state of sections (collapsed/expanded) while dragging a section header or a room causes a double readback for the a11y announcement.
+                vm.onSectionOrRoomDragStart();
             }}
             onDragEnd={(event) => {
                 const { source, target } = event.operation;
-                if (isSectionDragData(source?.data)) {
-                    vm.onSectionDragEnd();
-                }
+                vm.onSectionOrRoomDragEnd();
+
                 if (event.canceled || !source || !target) return;
                 if (isSectionDragData(source.data)) {
                     vm.changeSectionOrder(String(source.id), String(target.id));
@@ -558,10 +628,17 @@ export function VirtualizedRoomListView({ vm, renderAvatar, onKeyDown }: Virtual
                 }
             }}
             sensors={[
-                // By default, the PointerSensor activates dragging immediately on pointer down, which interferes with keyboard navigation.
-                // So we start dragging after the pointer has moved by 5 pixels, to allow for click without dragging
+                // By default, PointerSensor activates dragging immediately on mouse pointer down, which interferes
+                // with clicking a room and keyboard navigation, so for mouse/pen we require a small drag distance
+                // before a drag starts (allowing a plain click without dragging).
+                // For touch, a Delay constraint that aborts the drag if the finger moves before the delay elapses is used to avoid accidental drags when scrolling the list with a finger.
                 PointerSensor.configure({
-                    activationConstraints: [new PointerActivationConstraints.Distance({ value: 5 })],
+                    activationConstraints(event) {
+                        if (event.pointerType === "touch") {
+                            return [new PointerActivationConstraints.Delay({ value: 250, tolerance: 5 })];
+                        }
+                        return [new PointerActivationConstraints.Distance({ value: 5 })];
+                    },
                 }),
                 // By default, the KeyboardSensor uses both space and enter to start dragging, which interferes with the keyboard enter shortcut to open a room.
                 KeyboardSensor.configure({

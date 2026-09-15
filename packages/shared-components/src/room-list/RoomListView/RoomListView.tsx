@@ -73,7 +73,10 @@ export interface RoomListViewActions {
      * Allow undefined to be returned if we don't have a view model for the room. In this case the room will not be rendered.
      */
     getRoomItemViewModel: (roomId: string) => RoomListItemViewModel | undefined;
-    /** Called when the visible range changes (virtualization API) */
+    /**
+     * Called when the rendered range changes (virtualization API). Indices are in room-index
+     * space (section header entries excluded): startIndex is inclusive, endIndex exclusive.
+     */
     updateVisibleRooms: (startIndex: number, endIndex: number) => void;
     /**
      * Called when the last genuinely-visible item index changes (excluding the rendered
@@ -100,9 +103,9 @@ export interface RoomListViewActions {
     /** Called to change the order of sections */
     changeSectionOrder: (sourceTag: string, targetTag: string) => void;
     /** Called when a section drag starts — collapses all sections */
-    onSectionDragStart: () => void;
+    onSectionOrRoomDragStart: () => void;
     /** Called when a section drag ends (drop or cancel) — restores expansion states */
-    onSectionDragEnd: () => void;
+    onSectionOrRoomDragEnd: () => void;
 }
 
 /**

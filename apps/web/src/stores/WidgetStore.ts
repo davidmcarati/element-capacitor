@@ -50,7 +50,7 @@ export default class WidgetStore extends AsyncStoreWithClient<EmptyObject> {
         if (!WidgetStore.internalInstance) {
             // Assigned before start() so re-entrant access during startup cannot recurse.
             WidgetStore.internalInstance = new WidgetStore();
-            WidgetStore.internalInstance.start();
+            void WidgetStore.internalInstance.start();
         }
         return WidgetStore.internalInstance;
     }
@@ -203,8 +203,3 @@ export default class WidgetStore extends AsyncStoreWithClient<EmptyObject> {
         this.emit(UPDATE_EVENT, roomId);
     }
 }
-
-Object.defineProperty(window, "mxWidgetStore", {
-    get: () => WidgetStore.instance,
-    configurable: true,
-});

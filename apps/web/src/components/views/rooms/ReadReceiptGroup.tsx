@@ -11,7 +11,7 @@ import { type User } from "matrix-js-sdk/src/matrix";
 import { Tooltip } from "@vector-im/compound-web";
 import { AutoHideScrollbar } from "@element-hq/web-shared-components";
 
-import ReadReceiptMarker, { type IReadReceiptPosition } from "./ReadReceiptMarker";
+import ReadReceiptMarker, { type IReadReceiptPosition, READ_AVATAR_SIZE } from "./ReadReceiptMarker";
 import { type IReadReceiptProps } from "./EventTile";
 import AccessibleButton from "../elements/AccessibleButton";
 import MemberAvatar from "../avatars/MemberAvatar";
@@ -29,7 +29,6 @@ const MAX_READ_AVATARS_PLUS_N = 3;
 const MAX_READ_AVATARS = MAX_READ_AVATARS_PLUS_N + 1;
 
 const READ_AVATAR_OFFSET = 10;
-export const READ_AVATAR_SIZE = 16;
 
 interface Props {
     readReceipts: IReadReceiptProps[];
@@ -88,11 +87,9 @@ export function ReadReceiptGroup({
         // (because it lost its container).
         // See also https://github.com/vector-im/element-web/issues/17561
         return (
-            <div className="mx_EventTile_msgOption">
-                <div className="mx_ReadReceiptGroup">
-                    <div className="mx_ReadReceiptGroup_button">
-                        <span className="mx_ReadReceiptGroup_container" />
-                    </div>
+            <div className="mx_ReadReceiptGroup">
+                <div className="mx_ReadReceiptGroup_button">
+                    <span className="mx_ReadReceiptGroup_container" />
                 </div>
             </div>
         );
@@ -109,7 +106,7 @@ export function ReadReceiptGroup({
                 readReceiptPosition = readReceiptMap[userId];
                 if (!readReceiptPosition) {
                     readReceiptPosition = {};
-                    // eslint-disable-next-line react-compiler/react-compiler
+                    // oxlint-disable-next-line react/immutability
                     readReceiptMap[userId] = readReceiptPosition;
                 }
             }
@@ -162,37 +159,35 @@ export function ReadReceiptGroup({
     }
 
     return (
-        <div className="mx_EventTile_msgOption">
-            <Tooltip
-                label={_t("timeline|read_receipt_title", { count: readReceipts.length })}
-                caption={tooltipText}
-                placement="top-end"
-            >
-                <div className="mx_ReadReceiptGroup" role="group" aria-label={_t("timeline|read_receipts_label")}>
-                    <AccessibleButton
-                        className="mx_ReadReceiptGroup_button"
-                        ref={button}
-                        aria-label={tooltipText}
-                        aria-haspopup="true"
-                        onClick={openMenu}
+        <Tooltip
+            label={_t("timeline|read_receipt_title", { count: readReceipts.length })}
+            caption={tooltipText}
+            placement="top-end"
+        >
+            <div className="mx_ReadReceiptGroup" role="group" aria-label={_t("timeline|read_receipts_label")}>
+                <AccessibleButton
+                    className="mx_ReadReceiptGroup_button"
+                    ref={button}
+                    aria-label={tooltipText}
+                    aria-haspopup="true"
+                    onClick={openMenu}
+                >
+                    {remText}
+                    <span
+                        className="mx_ReadReceiptGroup_container"
+                        style={{
+                            width:
+                                Math.min(maxAvatars, readReceipts.length) * READ_AVATAR_OFFSET +
+                                READ_AVATAR_SIZE -
+                                READ_AVATAR_OFFSET,
+                        }}
                     >
-                        {remText}
-                        <span
-                            className="mx_ReadReceiptGroup_container"
-                            style={{
-                                width:
-                                    Math.min(maxAvatars, readReceipts.length) * READ_AVATAR_OFFSET +
-                                    READ_AVATAR_SIZE -
-                                    READ_AVATAR_OFFSET,
-                            }}
-                        >
-                            {avatars}
-                        </span>
-                    </AccessibleButton>
-                    {contextMenu}
-                </div>
-            </Tooltip>
-        </div>
+                        {avatars}
+                    </span>
+                </AccessibleButton>
+                {contextMenu}
+            </div>
+        </Tooltip>
     );
 }
 

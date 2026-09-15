@@ -6,7 +6,7 @@
  */
 
 import { type Locator } from "@playwright/test";
-import { closeReleaseAnnouncement, rejectToast } from "@element-hq/element-web-playwright-common";
+import { closeReleaseAnnouncementIfExists, rejectToast } from "@element-hq/element-web-playwright-common";
 
 import { test, expect } from "../../../element-web-test";
 
@@ -23,7 +23,7 @@ test.describe("Roles & Permissions room settings tab", () => {
         await rejectToast(page, "Verify this device");
         await rejectToast(page, "Notifications");
         // Close the release announcement about the new room list sections
-        await closeReleaseAnnouncement(page, "Introducing Sections");
+        await closeReleaseAnnouncementIfExists(page, "Introducing Sections");
 
         await app.client.createRoom({
             name: roomName,
@@ -126,7 +126,7 @@ test.describe("Roles & Permissions room settings tab", () => {
             // Element should have automatically set the room to "sharing" history visibility
             const errorDialog = page.getByRole("heading", { name: "Cannot make room private" });
             await expect(errorDialog).toBeVisible();
-            await errorDialog.getByLabel("OK");
+            errorDialog.getByLabel("OK");
             await expect(settingsGroupHistory.getByText("Anyone")).toBeChecked();
         },
     );

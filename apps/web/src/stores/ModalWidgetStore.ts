@@ -35,7 +35,7 @@ export class ModalWidgetStore extends AsyncStoreWithClient<IState> {
         if (!ModalWidgetStore.internalInstance) {
             // Assigned before start() so re-entrant access during startup cannot recurse.
             ModalWidgetStore.internalInstance = new ModalWidgetStore();
-            ModalWidgetStore.internalInstance.start();
+            void ModalWidgetStore.internalInstance.start();
         }
         return ModalWidgetStore.internalInstance;
     }
@@ -67,7 +67,7 @@ export class ModalWidgetStore extends AsyncStoreWithClient<IState> {
             /* priority = */ false,
             /* static = */ true,
         );
-        this.modalInstance!.finished.then(([success, data]) => {
+        void this.modalInstance.finished.then(([success, data]) => {
             this.closeModalWidget(sourceWidget, widgetRoomId, success && data ? data : { "m.exited": true });
 
             this.openSourceWidgetId = null;
@@ -93,7 +93,7 @@ export class ModalWidgetStore extends AsyncStoreWithClient<IState> {
                 logger.error("No source widget API for modal widget");
                 return;
             }
-            sourceMessaging.widgetApi.notifyModalWidgetClose(data);
+            void sourceMessaging.widgetApi.notifyModalWidgetClose(data);
         }
     };
 }

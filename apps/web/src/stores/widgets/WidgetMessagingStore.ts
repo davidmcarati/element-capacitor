@@ -39,7 +39,7 @@ export class WidgetMessagingStore extends AsyncStoreWithClient<EmptyObject> {
         if (!WidgetMessagingStore.internalInstance) {
             // Assigned before start() so re-entrant access during startup cannot recurse.
             WidgetMessagingStore.internalInstance = new WidgetMessagingStore();
-            WidgetMessagingStore.internalInstance.start();
+            void WidgetMessagingStore.internalInstance.start();
         }
         return WidgetMessagingStore.internalInstance;
     }

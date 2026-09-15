@@ -79,10 +79,11 @@ function DraggableWrapper(props: RoomListItemViewProps): JSX.Element {
         isDragSource,
     } = useDraggable<RoomDragData>({
         id: item.id,
-        data: { type: "room" },
+        data: { type: "room", isDm: item.isDm },
         // We clone the item in the dnd overlay to avoid putting a hole in the list
         plugins: [Feedback.configure({ feedback: "clone" })],
         modifiers: [RestrictToVerticalAxis],
+        disabled: !item.canChangeSection,
     });
 
     // Rooms are also drop targets so a dragged room can be dropped onto another room to reorder
@@ -98,7 +99,14 @@ function DraggableWrapper(props: RoomListItemViewProps): JSX.Element {
     const isRoomReorderTarget = isDropTarget && source?.data?.type === "room";
 
     const dndRef = useMergeRefs([draggableRef, handleRef, droppableRef]);
+    // Only wire up the draggable refs when the room can be dragged, otherwise dndkit puts incorrect
+    // and misleading a11y attributes on the item (aria-disabled=true and aria-draggable=false)
     return (
-        <RoomListItemView {...props} ref={dndRef} isDragSource={isDragSource} isDropTarget={isRoomReorderTarget} />
+        <RoomListItemView
+            {...props}
+            ref={item.canChangeSection ? dndRef : undefined}
+            isDragSource={isDragSource}
+            isDropTarget={isRoomReorderTarget}
+        />
     );
 }

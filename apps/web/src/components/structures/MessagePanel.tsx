@@ -6,7 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only OR LicenseRef-Element-Com
 Please see LICENSE files in the repository root for full details.
 */
 
-import React, { type JSX, createRef, type ReactNode, type TransitionEventHandler } from "react";
+import React, { type JSX, createRef, type ReactNode, type TransitionEventHandler, useContext } from "react";
 import classNames from "classnames";
 import {
     type Room,
@@ -23,6 +23,7 @@ import {
     ReadMarker,
     TimelineSeparator,
     useCreateAutoDisposedViewModel,
+    type EventTileRenderingMode,
 } from "@element-hq/web-shared-components";
 
 import shouldHideEvent from "../../shouldHideEvent";
@@ -58,6 +59,7 @@ import { _t } from "../../languageHandler";
 import { getLateEventInfo } from "./grouper/LateEventGrouper";
 import { DateSeparatorViewModel } from "../../viewmodels/room/timeline/DateSeparatorViewModel";
 import { isEligibleForSpecialReceipt } from "../../viewmodels/room/timeline/event-tile/EventTileReceiptState";
+import { SDKContext } from "../../contexts/SDKContext.ts";
 
 const CONTINUATION_MAX_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const continuedTypes = [EventType.Sticker, EventType.RoomMessage];
@@ -66,7 +68,10 @@ const continuedTypes = [EventType.Sticker, EventType.RoomMessage];
  * Creates and auto-disposes the DateSeparatorViewModel for message panel rendering.
  */
 function DateSeparatorWrapper({ roomId, ts }: { roomId: string; ts: number }): JSX.Element {
-    const vm = useCreateAutoDisposedViewModel(() => new DateSeparatorViewModel({ roomId, ts }));
+    const sdkContext = useContext(SDKContext);
+    const vm = useCreateAutoDisposedViewModel(
+        () => new DateSeparatorViewModel({ roomId, ts, roomViewStore: sdkContext.roomViewStore }),
+    );
     return <DateSeparatorView vm={vm} className="mx_TimelineSeparator" />;
 }
 
@@ -190,6 +195,9 @@ interface IProps {
 
     // which layout to use
     layout?: Layout;
+
+    // which shape to use
+    shape?: EventTileRenderingMode;
 
     permalinkCreator?: RoomPermalinkCreator;
     editState?: EditorStateTransfer;
@@ -812,6 +820,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
                 ref={this.collectEventTile.bind(this, eventId)}
                 alwaysShowTimestamps={this.props.alwaysShowTimestamps}
                 mxEvent={mxEv}
+                shape={this.props.shape}
                 continuation={continuation}
                 isRedacted={mxEv.isRedacted()}
                 replacingEventId={mxEv.replacingEventId()}

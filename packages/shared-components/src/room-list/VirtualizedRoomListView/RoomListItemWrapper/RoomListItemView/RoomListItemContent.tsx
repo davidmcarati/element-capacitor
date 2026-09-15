@@ -6,7 +6,7 @@
  */
 
 import React, { type JSX, memo, type ReactNode } from "react";
-import { Text } from "@vector-im/compound-web";
+import { Text, Tooltip } from "@vector-im/compound-web";
 import { ChevronDownIcon, ChevronUpIcon } from "@vector-im/compound-design-tokens/assets/web/icons";
 import classNames from "classnames";
 
@@ -61,6 +61,13 @@ export const RoomListItemContent = memo(function RoomListItemContent({
                     <div className={styles.roomNameRow}>
                         <div className={styles.roomName} title={item.name} data-testid="room-name">
                             {item.name}
+                            {item.userStatus && (
+                                <Tooltip description={item.userStatus.text}>
+                                    <Text as="span" className={styles.userStatusEmoji}>
+                                        {item.userStatus.emoji}
+                                    </Text>
+                                </Tooltip>
+                            )}
                         </div>
                         {showThreadsToggle && (
                             <button
@@ -87,6 +94,7 @@ export const RoomListItemContent = memo(function RoomListItemContent({
                             </button>
                         )}
                     </div>
+
                     {item.messagePreview && (
                         <Text as="div" size="sm" className={styles.ellipsis} title={item.messagePreview}>
                             {item.messagePreview}
