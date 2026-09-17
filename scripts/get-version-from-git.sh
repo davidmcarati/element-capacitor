@@ -5,7 +5,16 @@
 
 set -e
 
-# Since the deps are fetched from git & linked, we can rev-parse
-JSSDK_SHA=$(git -C $(pnpm -w root)/matrix-js-sdk rev-parse --short=12 HEAD)
 VECTOR_SHA=$(git rev-parse --short=12 HEAD) # use the ACTUAL SHA rather than assume develop
-echo "$VECTOR_SHA-js-$JSSDK_SHA"
+
+# The js-sdk is only a git checkout when something has linked one in: scripts/docker-link-repos.sh
+# does so when building `develop` or when USE_CUSTOM_SDKS is set, and a developer may have done the
+# same by hand. Installed as an ordinary dependency it is an unpacked tarball with no .git to read,
+# so fall back to naming element-web alone rather than failing the build.
+JSSDK_DIR="$(pnpm -w root)/matrix-js-sdk"
+if [ -e "$JSSDK_DIR/.git" ]; then
+    JSSDK_SHA=$(git -C "$JSSDK_DIR" rev-parse --short=12 HEAD)
+    echo "$VECTOR_SHA-js-$JSSDK_SHA"
+else
+    echo "$VECTOR_SHA"
+fi
