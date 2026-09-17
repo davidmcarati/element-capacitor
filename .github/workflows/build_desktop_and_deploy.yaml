@@ -1,8 +1,9 @@
 name: Build and Deploy
 on:
-    # Nightly build
-    schedule:
-        - cron: "0 9 * * *"
+    # [fork] Nightly desktop build disabled: signs & deploys to element.io infra (see .github/FORK-CI.md)
+    # # Nightly build
+    # schedule:
+    #     - cron: "0 9 * * *"
     # Release build
     release:
         types: [published]

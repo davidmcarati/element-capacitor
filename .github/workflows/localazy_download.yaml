@@ -1,8 +1,9 @@
 name: Localazy Download
 on:
     workflow_dispatch: {}
-    schedule:
-        - cron: "0 6 * * 1,3,5" # Every Monday, Wednesday and Friday at 6am UTC
+    # [fork] Disabled: needs Localazy credentials we do not have (see .github/FORK-CI.md)
+    # schedule:
+    #     - cron: "0 6 * * 1,3,5" # Every Monday, Wednesday and Friday at 6am UTC
 permissions:
     pull-requests: write # needed to auto-approve PRs
 jobs:

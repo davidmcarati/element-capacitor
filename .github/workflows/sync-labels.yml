@@ -1,8 +1,9 @@
 name: Sync labels
 on:
     workflow_dispatch: {}
-    schedule:
-        - cron: "0 1 * * *" # 1am every day
+    # [fork] Disabled: needs ELEMENT_BOT_TOKEN, syncs element-hq label taxonomy (see .github/FORK-CI.md)
+    # schedule:
+    #     - cron: "0 1 * * *" # 1am every day
     push:
         branches:
             - develop

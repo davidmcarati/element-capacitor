@@ -2,8 +2,9 @@
 name: Update Jitsi
 on:
     workflow_dispatch: {}
-    schedule:
-        - cron: "0 3 * * 0" # 3am every Sunday
+    # [fork] Disabled: needs ELEMENT_BOT_TOKEN to open its PR (see .github/FORK-CI.md)
+    # schedule:
+    #     - cron: "0 3 * * 0" # 3am every Sunday
 permissions: {} # We use ELEMENT_BOT_TOKEN instead
 jobs:
     update:

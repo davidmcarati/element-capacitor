@@ -9,9 +9,10 @@
 # Produces multiple Playwright report artifacts
 name: Build & Test
 on:
-    # CRON to run all Projects at 6am UTC
-    schedule:
-        - cron: "0 6 * * *"
+    # [fork] Nightly disabled: same suite already runs on every PR / merge_group here (see .github/FORK-CI.md)
+    # # CRON to run all Projects at 6am UTC
+    # schedule:
+    #     - cron: "0 6 * * *"
     pull_request: {}
     merge_group:
         types: [checks_requested]
